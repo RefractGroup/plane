@@ -2,17 +2,23 @@
 
 A Morse Micro-branded build of [Plane](https://github.com/makeplane/plane) Community Edition, run by Refract for the Morse Micro website and content programme.
 
-This branch (`morse`) is upstream `v1.4.2` plus a small set of frontend changes:
+This branch (`morse`) is upstream `v1.4.2` plus a small set of changes, mostly frontend:
 
 - Brand colors use the eight Morse Micro brand colors (`packages/tailwind-config/variables.css`).
 - The Plane wordmark, icon, favicons and loading spinner show the Morse Micro logo.
 - The "Star us on GitHub" link and the Community edition / paid plan badge are removed.
 - Kanban columns are 290px wide so four fit on a laptop screen.
 - The light theme is the default (people can still choose dark), and page titles read "Morse Micro | Website and Content".
+- Cards show two-line titles and short dates ("Nov 5"). The inline "New work item" rows are hidden.
+- The sidebar hides Stickies, Your work and Drafts.
+- Modules are called "Outcomes" in the English labels.
+- New members start on a simple list grouped by category, showing only status, date and outcome. This is the one backend change: `apps/api/plane/db/models/issue.py` is copied into the image.
+- Links between board pages open in the same tab. Cmd, Ctrl or Shift click still opens a new tab.
+- The pages list sorts oldest first, so the plan comes first and the numbered strategy pages follow in order.
 
 ## How it is built
 
-`deployments/morse/Dockerfile` rebuilds only the web app from this branch, using the same build settings as upstream `apps/web/Dockerfile.web`. The API, workers, realtime server and proxy come unchanged from the official `makeplane/plane-aio-community` image of the same version.
+`deployments/morse/Dockerfile` rebuilds only the web app from this branch, using the same build settings as upstream `apps/web/Dockerfile.web`. The API, workers, realtime server and proxy come from the official `makeplane/plane-aio-community` image of the same version, with the one model file above copied over.
 
 `supervisor.conf` is upstream's all-in-one process config with logs sent to stdout, a capped Celery worker concurrency (`CELERY_WORKER_CONCURRENCY`, default 2), and an idempotent admin bootstrap (`morse_bootstrap_admin.py`) so `/god-mode` is never left unclaimed.
 
