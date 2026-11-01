@@ -1,0 +1,62 @@
+# Morse Micro board proxy, adapted from apps/proxy/Caddyfile.aio.ce (v1.4.2).
+# Changes from upstream:
+# - /morsemicro is a short link. It redirects to MORSE_SHORT_LINK_TARGET (a path on this
+#   site, set in the service variables), or to the workspace home if that isn't set.
+# - The web app's HTML and other unhashed files are sent with "Cache-Control: no-cache", so
+#   browsers check for a new version after a deploy instead of showing a stale app. Hashed
+#   files under /assets/ keep their normal caching.
+
+(plane_proxy) {
+	request_body {
+		max_size {$FILE_SIZE_LIMIT}
+	}
+
+	@morse_short_link path /morsemicro /morsemicro/
+	redir @morse_short_link {$MORSE_SHORT_LINK_TARGET:/morse-micro/} 302
+
+	@web_shell not path /assets/* /api/* /auth/* /live/* /spaces/*
+	header @web_shell Cache-Control "no-cache"
+
+	handle /spaces/* {
+		reverse_proxy localhost:3002
+	}
+
+	handle /live/* {
+		reverse_proxy localhost:3005
+	}
+
+	handle /api/* {
+		reverse_proxy localhost:3004
+	}
+
+	handle /auth/* {
+		reverse_proxy localhost:3004
+	}
+
+	handle_path /god-mode* {
+		root * /app/admin
+		try_files {path} {path}/ /index.html
+		file_server
+	}
+
+	handle_path /* {
+		root * /app/web
+		try_files {path} {path}/ /index.html
+		file_server
+	}
+}
+
+{
+	{$CERT_EMAIL}
+	acme_ca {$CERT_ACME_CA:https://acme-v02.api.letsencrypt.org/directory}
+	{$CERT_ACME_DNS}
+	servers {
+		max_header_size 25MB
+		client_ip_headers X-Forwarded-For X-Real-IP
+		trusted_proxies static {$TRUSTED_PROXIES:0.0.0.0/0}
+	}
+}
+
+{$SITE_ADDRESS} {
+	import plane_proxy
+}
