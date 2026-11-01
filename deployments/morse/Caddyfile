@@ -5,11 +5,16 @@
 # - The web app's HTML and other unhashed files are sent with "Cache-Control: no-cache", so
 #   browsers check for a new version after a deploy instead of showing a stale app. Hashed
 #   files under /assets/ keep their normal caching.
+# - Requests to MORSE_OLD_HOST (the board's previous address, if it has moved) redirect to the
+#   same path on DOMAIN_NAME. With MORSE_OLD_HOST unset, nothing matches.
 
 (plane_proxy) {
 	request_body {
 		max_size {$FILE_SIZE_LIMIT}
 	}
+
+	@morse_old_address host {$MORSE_OLD_HOST:old-address.invalid}
+	redir @morse_old_address https://{$DOMAIN_NAME}{uri} 302
 
 	@morse_short_link path /morsemicro /morsemicro/
 	redir @morse_short_link {$MORSE_SHORT_LINK_TARGET:/morse-micro/} 302
