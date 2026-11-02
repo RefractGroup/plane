@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import type { ReactNode } from "react";
 import { Link } from "react-router";
-import { ArrowUpRight, ChartNoAxesCombined, Globe, Home } from "lucide-react";
+import { ArrowUpRight, ChartNoAxesCombined, CheckCircle2, Globe, Home, Plug } from "lucide-react";
 import { TranslationProvider } from "@plane/i18n";
 import { Header } from "@plane/ui";
-import { PageIcon } from "@plane/propel/icons";
+import { PageIcon, WorkItemsIcon, IntakeIcon } from "@plane/propel/icons";
 import { UserGreetingsView } from "@/components/home/user-greetings";
 import { LogoSpinner } from "@/components/common/logo-spinner";
 import { ClientStateIcon } from "./work-list";
@@ -68,18 +68,33 @@ export function ClientHome({ slug, suffix, name }: { slug: string; suffix: strin
             <Widget title="Your workspace">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {[
-                  { label: "Active work", value: data.counts.active, path: "work" },
-                  { label: "Completed", value: data.counts.completed, path: "work", query: "group=completed" },
-                  { label: "Requests", value: data.counts.requests, path: "requests" },
-                  { label: "Shared pages", value: data.counts.pages, path: "documents" },
+                  { label: "Active work", value: data.counts.active, path: "work", icon: WorkItemsIcon },
+                  {
+                    label: "Completed",
+                    value: data.counts.completed,
+                    path: "work",
+                    query: "group=completed",
+                    icon: CheckCircle2,
+                  },
+                  { label: "Requests", value: data.counts.requests, path: "requests", icon: IntakeIcon },
+                  { label: "Shared pages", value: data.counts.pages, path: "documents", icon: PageIcon },
                 ].map((item) => (
                   <Link
                     key={item.label}
                     to={`${href(item.path)}${item.query ? `${suffix ? "&" : "?"}${item.query}` : ""}`}
-                    className="rounded-md border border-subtle p-4 hover:border-strong"
+                    className="client-home-card client-home-shortcut group rounded-lg border border-subtle bg-surface-1 p-4"
                   >
-                    <div className="text-12 text-secondary">{item.label}</div>
-                    <div className="mt-2 text-24 font-semibold tabular-nums">{item.value}</div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-12 text-secondary">{item.label}</span>
+                      <item.icon aria-hidden="true" className="size-3.5 shrink-0 text-tertiary" />
+                    </div>
+                    <div className="mt-3 flex items-end justify-between">
+                      <span className="text-24 font-semibold tracking-tight tabular-nums">{item.value}</span>
+                      <ArrowUpRight
+                        aria-hidden="true"
+                        className="client-home-shortcut-arrow mb-1 size-3.5 text-tertiary"
+                      />
+                    </div>
                   </Link>
                 ))}
               </div>
@@ -93,21 +108,27 @@ export function ClientHome({ slug, suffix, name }: { slug: string; suffix: strin
                     return (
                       <div
                         key={panel}
-                        className={`rounded-md border border-subtle p-5 ${data.performance_panels.length === 1 ? "sm:col-span-2" : ""}`}
+                        className={`client-home-card flex flex-col rounded-lg border border-subtle bg-surface-1 p-5 ${data.performance_panels.length === 1 ? "sm:col-span-2" : ""}`}
                       >
                         <div className="mb-5 flex items-center justify-between gap-2">
-                          <Icon className="size-5 text-tertiary" />
-                          <span className="text-11 text-tertiary">Not connected</span>
+                          <span className="client-home-icon flex size-9 items-center justify-center rounded-lg border border-subtle text-accent-primary">
+                            <Icon aria-hidden="true" className="size-[18px]" strokeWidth={1.6} />
+                          </span>
+                          <span className="flex items-center gap-1.5 rounded-full border border-subtle px-2 py-1 text-11 text-tertiary">
+                            <span aria-hidden="true" className="size-1.5 rounded-full bg-current opacity-50" />
+                            Not connected
+                          </span>
                         </div>
                         <h3 className="text-14 font-medium">
                           {website ? "Website performance" : "Performance attribution"}
                         </h3>
-                        <p className="mt-2 text-13 leading-relaxed text-secondary">
+                        <p className="mt-2 flex-1 text-13 leading-relaxed text-secondary">
                           {website
                             ? "Traffic, engagement and conversions will appear here once website reporting is connected."
                             : "See how channels contribute to enquiries and outcomes once reporting is connected."}
                         </p>
-                        <p className="mt-5 border-t border-subtle pt-3 text-11 text-tertiary">
+                        <p className="mt-5 flex items-center gap-2 border-t border-subtle pt-3 text-11 text-tertiary">
+                          <Plug aria-hidden="true" className="size-3.5 shrink-0" />
                           No reporting data connected yet
                         </p>
                       </div>

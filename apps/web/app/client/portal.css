@@ -77,3 +77,54 @@
   border: 1px solid #ddd;
   padding: 0.5em 0.75em;
 }
+
+/* Home cards retain Plane surfaces; layered shadows add depth without filled panels. */
+.client-home-card {
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 4%),
+    0 4px 12px -4px rgb(15 23 42 / 7%);
+}
+.client-home-icon {
+  background: linear-gradient(145deg, transparent 25%, rgb(110 68 255 / 5%));
+  box-shadow: 0 1px 2px rgb(15 23 42 / 5%);
+}
+.client-home-shortcut {
+  transition:
+    box-shadow 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+.client-home-shortcut-arrow {
+  opacity: 0.4;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+.client-home-shortcut:focus-visible {
+  box-shadow:
+    0 2px 4px rgb(15 23 42 / 5%),
+    0 8px 20px -6px rgb(15 23 42 / 12%);
+}
+@media (hover: hover) {
+  .client-home-shortcut:hover {
+    transform: translateY(-1px);
+    border-color: rgb(110 68 255 / 24%);
+    box-shadow:
+      0 2px 4px rgb(15 23 42 / 5%),
+      0 8px 20px -6px rgb(15 23 42 / 12%);
+  }
+  .client-home-shortcut:hover .client-home-shortcut-arrow {
+    opacity: 1;
+    transform: translate(1px, -1px);
+  }
+}
+.client-home-shortcut:focus-visible .client-home-shortcut-arrow {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .client-home-shortcut,
+  .client-home-shortcut-arrow {
+    transition: none;
+    transform: none !important;
+  }
+}
