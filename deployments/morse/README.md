@@ -53,3 +53,7 @@ The authenticated v1 API includes read-only project pages at `projects/{project_
 Attachment APIs verify project membership and bind every asset to the work item in the URL. Generic asset routes also check the asset's project and private-page access. No schema migration is required.
 
 Run the contract tests in `plane/tests/contract/api/test_portal_pages.py`, `test_portal_attachments.py` and `test_generic_asset.py` using the isolated Docker test stack before changing these routes. After deployment, repeat the synthetic integration checks from the private portal repository.
+
+## Client interface
+
+The native client interface is documented in [CLIENT-PORTAL.md](CLIENT-PORTAL.md). It reuses this fork's web app, design system, Django authentication and content models. Local preview and rollout status are separate from the live board.

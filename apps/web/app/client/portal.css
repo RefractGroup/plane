@@ -1,0 +1,79 @@
+.client-portal {
+  font-family: "Inter Variable", Inter, sans-serif;
+}
+.client-portal nav > a {
+  display: block;
+}
+.client-portal button:not(:disabled),
+.client-portal select {
+  cursor: pointer;
+}
+.client-portal :is(a, button, input, textarea, select):focus-visible {
+  outline: 2px solid #6e44ff;
+  outline-offset: 3px;
+}
+.client-portal .client-rich-text {
+  font-size: 14px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+.client-rich-text p {
+  margin: 0 0 1em;
+}
+.client-rich-text h1,
+.client-rich-text h2,
+.client-rich-text h3 {
+  margin: 1.5em 0 0.6em;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.client-rich-text h1 {
+  font-size: 28px;
+}
+.client-rich-text h2 {
+  font-size: 21px;
+}
+.client-rich-text h3 {
+  font-size: 17px;
+}
+.client-rich-text ul,
+.client-rich-text ol {
+  margin: 0.75em 0;
+  padding-left: 1.5em;
+}
+.client-rich-text ul {
+  list-style: disc;
+}
+.client-rich-text ol {
+  list-style: decimal;
+}
+.client-rich-text blockquote {
+  border-left: 3px solid #bbb;
+  margin: 1em 0;
+  padding-left: 1em;
+}
+.client-rich-text a {
+  text-decoration: underline;
+}
+.client-rich-text img {
+  max-width: 100%;
+  height: auto;
+  margin: 1em 0;
+}
+.client-rich-text pre {
+  overflow-x: auto;
+  padding: 1em;
+  background: #f4f4f5;
+  border-radius: 4px;
+}
+.client-rich-text table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+.client-rich-text td,
+.client-rich-text th {
+  border: 1px solid #ddd;
+  padding: 0.5em 0.75em;
+}

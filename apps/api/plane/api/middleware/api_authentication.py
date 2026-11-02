@@ -37,6 +37,10 @@ class APIKeyAuthentication(authentication.BaseAuthentication):
         except APIToken.DoesNotExist:
             raise AuthenticationFailed("Given API token is not valid")
 
+        from plane.client_portal.middleware import is_client
+        if is_client(api_token.user):
+            raise AuthenticationFailed("Client accounts cannot use staff API keys")
+
         # save api token last used
         api_token.last_used = timezone.now()
         api_token.save(update_fields=["last_used"])

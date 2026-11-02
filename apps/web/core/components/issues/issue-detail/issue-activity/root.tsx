@@ -5,6 +5,7 @@
  */
 
 import { useMemo } from "react";
+import { useResource } from "@/app/client/api";
 import uniq from "lodash-es/uniq";
 import { observer } from "mobx-react";
 // plane package imports
@@ -75,6 +76,8 @@ export const IssueActivity = observer(function IssueActivity(props: TIssueActivi
   const activityOperations = useWorkItemCommentOperations(workspaceSlug, projectId, issueId);
 
   const project = getProjectById(projectId);
+  const { data: clientPortal } = useResource<{ enabled: boolean }>(`project/${projectId}/`);
+  const showClientAccess = !!project?.anchor || !!clientPortal?.enabled;
   const renderCommentCreationBox = useMemo(
     () => (
       <CommentCreate
@@ -82,15 +85,21 @@ export const IssueActivity = observer(function IssueActivity(props: TIssueActivi
         entityId={issueId}
         activityOperations={activityOperations}
         showToolbarInitially
+        showAccessSpecifier={showClientAccess}
         projectId={projectId}
       />
     ),
-    [workspaceSlug, issueId, activityOperations, projectId]
+    [workspaceSlug, issueId, activityOperations, projectId, showClientAccess]
   );
   if (!project) return <></>;
 
   return (
     <div className="space-y-4">
+      {clientPortal?.enabled && (
+        <p className="text-12 text-tertiary">
+          Public comments appear in the client workspace for shared work. Private comments stay with the team.
+        </p>
+      )}
       {/* header */}
       <div className="flex items-center justify-between">
         <div className="text-h5-medium text-primary">{t("common.activity")}</div>
@@ -117,7 +126,7 @@ export const IssueActivity = observer(function IssueActivity(props: TIssueActivi
               issueId={issueId}
               selectedFilters={selectedFilters || defaultActivityFilters}
               activityOperations={activityOperations}
-              showAccessSpecifier={!!project.anchor}
+              showAccessSpecifier={showClientAccess}
               disabled={disabled}
               sortOrder={sortOrder || E_SORT_ORDER.ASC}
             />

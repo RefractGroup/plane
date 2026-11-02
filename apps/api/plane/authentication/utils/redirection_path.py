@@ -6,6 +6,9 @@ from plane.db.models import Profile, Workspace, WorkspaceMemberInvite
 
 
 def get_redirection_path(user):
+    from plane.client_portal.middleware import is_client
+    if is_client(user):
+        return "client/"
     # Handle redirections
     profile, _ = Profile.objects.get_or_create(user=user)
 
