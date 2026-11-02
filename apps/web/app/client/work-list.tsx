@@ -213,9 +213,7 @@ export function ClientWorkList({
               <section key={g} className={board ? "w-80 shrink-0" : ""}>
                 <Row
                   className={
-                    board
-                      ? "mb-2 rounded-md bg-layer-1 px-3 py-2"
-                      : "w-full border-b border-subtle bg-layer-1 py-1 pr-3"
+                    board ? "mb-2 border-b border-subtle px-3 py-2" : "w-full border-b border-subtle py-1 pr-3"
                   }
                 >
                   <button
