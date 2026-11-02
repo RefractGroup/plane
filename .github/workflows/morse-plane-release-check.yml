@@ -1,0 +1,66 @@
+# Monthly check for new Plane releases (Refract portal, not an upstream workflow).
+# Compares the Plane version the board is pinned to (PLANE_VERSION in deployments/morse/Dockerfile)
+# with Plane's latest release, and opens one issue per new release. It never changes or deploys
+# anything; updating stays a deliberate, tested step (see deployments/morse/README.md).
+name: Plane release check
+
+on:
+  schedule:
+    - cron: "0 22 1 * *" # 22:00 UTC on the 1st, which is the morning of the 2nd in Sydney
+  workflow_dispatch:
+    inputs:
+      pretend_pinned:
+        description: "Test only: compare against this version instead of the pinned one"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: deployments/morse/Dockerfile
+          sparse-checkout-cone-mode: false
+
+      - name: Compare the pinned version with Plane's latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRETEND_PINNED: ${{ inputs.pretend_pinned }}
+        run: |
+          set -euo pipefail
+          pinned=$(sed -n 's/^ARG PLANE_VERSION=//p' deployments/morse/Dockerfile)
+          if [ -n "${PRETEND_PINNED:-}" ]; then
+            echo "Test run: pretending the board is on $PRETEND_PINNED (really $pinned)"
+            pinned="$PRETEND_PINNED"
+          fi
+          latest=$(gh api repos/makeplane/plane/releases/latest --jq .tag_name)
+          echo "Pinned: $pinned  Latest: $latest"
+          if [ "$pinned" = "$latest" ]; then
+            echo "The board is on the latest Plane release."
+            exit 0
+          fi
+
+          title="Plane $latest is out (the board is on $pinned)"
+          open=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"Plane $latest is out\" in:title" --json number --jq length)
+          if [ "$open" != "0" ]; then
+            echo "An issue for $latest is already open."
+            exit 0
+          fi
+
+          security=$(gh api "repos/makeplane/plane/releases/tags/$latest" --jq .body | grep -ciE "security|vulnerab|cve|ghsa" || true)
+          {
+            echo "Plane released **$latest**. The board at portal.refract.group is pinned to **$pinned**."
+            echo
+            echo "- Release notes: https://github.com/makeplane/plane/releases/tag/$latest"
+            if [ "$security" != "0" ]; then
+              echo "- The release notes mention security fixes, so this one is worth doing soon."
+            fi
+            echo
+            echo "Nothing has been changed. To update, follow \"Updating from upstream\" in deployments/morse/README.md: back up the database, merge the release on a branch, test it on a staging copy, then fast-forward \`morse\`."
+          } > body.md
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body-file body.md

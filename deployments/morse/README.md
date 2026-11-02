@@ -31,7 +31,16 @@ Point the service at this repository and branch, set `RAILWAY_DOCKERFILE_PATH=de
 
 ## Updating from upstream
 
-Merge or rebase onto a newer upstream tag, then bump `PLANE_VERSION` in the Dockerfile to the same tag so the web build and runtime image match.
+The board doesn't follow Plane automatically: it's pinned to the release in `PLANE_VERSION`, and Railway only deploys pushes to `morse`. A workflow, `.github/workflows/morse-plane-release-check.yml`, checks Plane's latest release on the 1st of each month and opens an issue here when there's a newer one. It changes nothing itself. GitHub pauses scheduled workflows in public repos after 60 days without commits and emails a warning first, so re-enable it from the Actions tab if that happens.
+
+To update (this is how v1.4.2 went to v1.4.3 on 2 November 2026):
+
+1. Read the release notes and diff the new tag against the current one for files this branch changes, new migrations, and changes to `apps/web/Dockerfile.web`, `deployments/aio/community/` and `apps/proxy/Caddyfile.aio.ce`, which our build copies.
+2. Back up the database: a Railway snapshot of the Postgres volume and a `pg_dump` (run inside the Postgres service with `railway ssh`).
+3. Merge the tag on a branch, bump `PLANE_VERSION` (and anything copied from upstream build files), and push the branch. Railway won't deploy it.
+4. Test on a staging copy: duplicate the production environment, point its Plane service at the branch and its own domain, restore the dump into its Postgres, then check start-up, the version, content, sign-in, editing and comments.
+5. Fast-forward `morse` to the branch. Railway switches over only after the health check passes, and the previous deployment is the rollback.
+6. Compare the board's content before and after, then delete the staging environment.
 
 ## License
 
