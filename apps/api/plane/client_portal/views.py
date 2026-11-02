@@ -187,6 +187,29 @@ class SessionView(PortalView):
         )
 
 
+class HomeView(PortalView):
+    def get(self, request, slug):
+        portal = client_scope(request, slug)
+        issues = visible_issues(portal)
+        active = issues.exclude(state__group__in=["completed", "cancelled"])
+        pages = readable_pages(portal.project.workspace.slug, portal.project_id).filter(
+            id__in=SharedDocument.objects.filter(portal=portal).values("page_id")
+        )
+        return Response(
+            {
+                "counts": {
+                    "active": active.count(),
+                    "completed": issues.filter(state__group="completed").count(),
+                    "requests": issues.filter(clientrequest__portal=portal).count(),
+                    "pages": pages.count(),
+                },
+                "work": [issue_record(i) for i in active.order_by("target_date", "-updated_at", "id")[:5]],
+                "pages": [page_record(p) for p in pages.order_by("-updated_at", "id")[:3]],
+                "performance_panels": portal.performance_panels,
+            }
+        )
+
+
 class WorkView(PortalView):
     def get(self, request, slug):
         portal = client_scope(request, slug)
@@ -415,6 +438,7 @@ class ManageView(PortalView):
             {
                 "name": portal.name,
                 "slug": portal.slug,
+                "performance_panels": portal.performance_panels,
                 "documents": [
                     {**page_record(p), "shared": p.id in selected}
                     for p in readable_pages(portal.project.workspace.slug, portal.project_id)
@@ -442,6 +466,17 @@ class ManageView(PortalView):
                     SharedDocument.objects.get_or_create(portal=portal, page=page, defaults={"shared_by": request.user})
                 else:
                     SharedDocument.objects.filter(portal=portal, page=page).delete()
+            elif kind == "home":
+                panels = request.data.get("performance_panels")
+                if (
+                    not isinstance(panels, list)
+                    or len(panels) > 2
+                    or any(not isinstance(p, str) or p not in ("website", "attribution") for p in panels)
+                    or len(set(panels)) != len(panels)
+                ):
+                    raise ValidationError("Choose website and/or attribution panels.")
+                portal.performance_panels = panels
+                portal.save(update_fields=["performance_panels"])
             elif kind == "person":
                 email = text_value(request.data, "email", 255).lower()
                 user = get_object_or_404(User.objects.filter(is_active=True), email=email)

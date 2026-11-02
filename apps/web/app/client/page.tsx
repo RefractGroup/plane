@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import {
+  Home,
   ChevronRight,
   ChevronDown,
   Globe,
@@ -30,6 +31,7 @@ import { ModalCore } from "@plane/ui";
 import { Dialog } from "@headlessui/react";
 import { WorkItemPeekFrame } from "@/components/issues/peek-overview/frame";
 import { SidebarAddButton } from "@/components/sidebar/add-button";
+import { ClientHome } from "./home";
 import { ClientWorkList, ClientStateIcon as Status } from "./work-list";
 import { SidebarNavItem } from "@/components/sidebar/sidebar-navigation";
 import { LogoSpinner } from "@/components/common/logo-spinner";
@@ -157,7 +159,7 @@ export default function ClientPortalPage() {
   const [projectOpen, setProjectOpen] = useState(true);
   const parts = location.pathname.split("/").filter(Boolean);
   const slug = parts[1] || "";
-  const section = parts[2] || "work";
+  const section = parts[2] || "home";
   const resource = parts[3];
   const preview = new URLSearchParams(location.search).get("preview") === "1";
   const suffix = preview ? "?preview=1" : "";
@@ -166,7 +168,7 @@ export default function ClientPortalPage() {
   }, [location.pathname]);
   useEffect(() => {
     if (session.data?.user && !slug && session.data.clients.length === 1)
-      navigate(`/client/${session.data.clients[0].slug}/work`, { replace: true });
+      navigate(`/client/${session.data.clients[0].slug}/home`, { replace: true });
   }, [session.data, slug, navigate]);
   if (session.error)
     return (
@@ -217,7 +219,7 @@ export default function ClientPortalPage() {
             }
           >
             {(preview ? managed : clients).map((client) => (
-              <NativeMenu.MenuItem key={client.slug} onClick={() => navigate(`/client/${client.slug}/work${suffix}`)}>
+              <NativeMenu.MenuItem key={client.slug} onClick={() => navigate(`/client/${client.slug}/home${suffix}`)}>
                 <Globe size={14} />
                 {client.name}
               </NativeMenu.MenuItem>
@@ -319,6 +321,16 @@ export default function ClientPortalPage() {
             )}
           </div>
           <div className="flex-1 overflow-auto px-3 pt-6">
+            {portal && (
+              <Link to={href("home")} aria-current={section === "home" ? "page" : undefined} className="mb-6 block">
+                <SidebarNavItem isActive={section === "home"}>
+                  <span className="flex items-center gap-2 text-13">
+                    <Home className="size-4" />
+                    Home
+                  </span>
+                </SidebarNavItem>
+              </Link>
+            )}
             <div className="mb-3 flex items-center justify-between px-2 text-13 font-medium text-tertiary">
               <span>Projects</span>
               <ChevronDown size={14} />
@@ -380,6 +392,8 @@ export default function ClientPortalPage() {
           )}
           {!portal ? (
             <WorkspacePicker session={session.data} reload={session.reload} manage={slug === "manage"} />
+          ) : section === "home" ? (
+            <ClientHome slug={slug} suffix={suffix} name={user.name} />
           ) : section === "account" ? (
             <div className="mx-auto max-w-3xl p-8">
               <h1 className="mb-8 text-24 font-medium">My account</h1>
@@ -808,7 +822,7 @@ function WorkspacePicker({ session, reload, manage }: { session: Session; reload
       </p>
       {session.clients.map((p) => (
         <Link
-          to={`/client/${p.slug}/work`}
+          to={`/client/${p.slug}/home`}
           key={p.slug}
           className="mb-3 flex items-center justify-between rounded-md border border-subtle-1 p-4 text-14"
         >
@@ -825,7 +839,7 @@ function WorkspacePicker({ session, reload, manage }: { session: Session; reload
               className="mb-3 flex flex-wrap items-center gap-4 rounded-md border border-subtle-1 p-4 text-13"
             >
               <span className="flex-1 font-medium">{p.name}</span>
-              <Link to={`/client/${p.slug}/work?preview=1`} className="text-secondary underline">
+              <Link to={`/client/${p.slug}/home?preview=1`} className="text-secondary underline">
                 View as client
               </Link>
               <Button size="sm" variant="secondary" onClick={() => setSelected(selected === p.slug ? "" : p.slug)}>
@@ -905,6 +919,7 @@ function WorkspacePicker({ session, reload, manage }: { session: Session; reload
 function ManageClient({ slug }: { slug: string }) {
   const { data, error, reload } = useResource<{
     documents: Doc[];
+    performance_panels: string[];
     people: { account_id: string; account__user__email: string; active: boolean }[];
     activity: { kind: string; created_at: string }[];
   }>(`manage/${slug}/`);
@@ -942,6 +957,33 @@ function ManageClient({ slug }: { slug: string }) {
           </label>
         ))}
         {!data.documents.length && <p className="text-13 text-tertiary">No eligible project documents.</p>}
+      </div>
+      <h3 className="mt-7 mb-2 text-14 font-medium">Home performance panels</h3>
+      <p className="mb-4 text-12 text-tertiary">
+        Choose what appears on this client’s Home. Data connections will be added later.
+      </p>
+      <div className="space-y-3">
+        {[
+          ["website", "Website performance"],
+          ["attribution", "Performance attribution"],
+        ].map(([id, title]) => (
+          <label key={id} className="flex items-center gap-3 text-13">
+            <input
+              type="checkbox"
+              checked={data.performance_panels.includes(id)}
+              disabled={busy}
+              onChange={(e) =>
+                void save({
+                  action: "home",
+                  performance_panels: e.target.checked
+                    ? [...data.performance_panels, id]
+                    : data.performance_panels.filter((panel) => panel !== id),
+                })
+              }
+            />
+            {title}
+          </label>
+        ))}
       </div>
       <h3 className="mt-7 mb-4 text-14 font-medium">People</h3>
       {data.people.map((p) => (

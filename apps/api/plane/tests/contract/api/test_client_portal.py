@@ -413,3 +413,48 @@ def test_portal_address_cannot_select_instance_session(portal_fixture):
     )
     assert response.status_code == 400
     assert not ClientPortal.objects.filter(project=project).exists()
+
+
+def test_home_only_summarises_shared_current_records(client_api, portal_fixture):
+    f = portal_fixture
+    data = client_api.get("/api/client/client-a/home/").json()
+    assert data["counts"] == {"active": 1, "completed": 0, "requests": 0, "pages": 1}
+    assert [i["id"] for i in data["work"]] == [str(f["issue"].id)]
+    assert [p["id"] for p in data["pages"]] == [str(f["page"].id)]
+    assert data["performance_panels"] == []
+    assert client_api.get("/api/client/client-b/home/").status_code == 404
+    f["access"].active = False
+    f["access"].save()
+    assert client_api.get("/api/client/client-a/home/").status_code == 404
+
+
+def test_home_counts_are_not_limited_to_work_page(client_api, portal_fixture):
+    f = portal_fixture
+    for n in range(102):
+        issue = Issue.objects.create(workspace=f["workspace"], project=f["p"], state=f["state"], name=f"Request {n}")
+        ClientRequest.objects.create(portal=f["portal"], issue=issue, submitted_by=f["user"])
+    data = client_api.get("/api/client/client-a/home/").json()
+    assert data["counts"]["active"] == 103
+    assert data["counts"]["requests"] == 102
+    assert len(data["work"]) == 5
+    f["issue"].archived_at = timezone.now()
+    f["issue"].save()
+    assert client_api.get("/api/client/client-a/home/").json()["counts"]["active"] == 102
+
+
+def test_home_panels_are_admin_managed_and_preview_is_scoped(client_api, portal_fixture):
+    f = portal_fixture
+    path = "/api/client/manage/client-a/"
+    body = {"action": "home", "performance_panels": ["website", "attribution"]}
+    assert client_api.post(path, body, format="json").status_code == 404
+    staff = APIClient()
+    staff.force_authenticate(f["create_user"])
+    assert staff.post(path, body, format="json").status_code == 200
+    assert staff.get(path).json()["performance_panels"] == body["performance_panels"]
+    assert staff.get("/api/client/client-a/home/").status_code == 404
+    assert staff.get("/api/client/client-a/home/?preview=1").json()["performance_panels"] == body["performance_panels"]
+    assert staff.get("/api/client/client-b/home/?preview=1").status_code == 404
+    for value in [["unknown"], ["website", "website"], "website", [None], {}]:
+        assert staff.post(path, {"action": "home", "performance_panels": value}, format="json").status_code == 400
+    assert staff.post(path, {"action": "home", "performance_panels": []}, format="json").status_code == 200
+    assert client_api.get("/api/client/client-a/home/").json()["performance_panels"] == []

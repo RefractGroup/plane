@@ -16,6 +16,7 @@ class ClientPortal(models.Model):
     name = models.CharField(max_length=120)
     slug = models.SlugField(max_length=80, unique=True)
     active = models.BooleanField(default=True)
+    performance_panels = models.JSONField(default=list, blank=True)
     client_label = models.ForeignKey("db.Label", null=True, blank=True, on_delete=models.SET_NULL)
     created_at = models.DateTimeField(auto_now_add=True)
 

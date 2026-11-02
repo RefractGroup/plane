@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import (
     SessionView,
+    HomeView,
     WorkView,
     TaskView,
     DocumentsView,
@@ -17,6 +18,7 @@ urlpatterns = [
     path("session/", SessionView.as_view()),
     path("manage/", CreatePortalView.as_view()),
     path("manage/<slug:slug>/", ManageView.as_view()),
+    path("<slug:slug>/home/", HomeView.as_view()),
     path("<slug:slug>/work/", WorkView.as_view()),
     path("<slug:slug>/work/<uuid:issue_id>/", TaskView.as_view()),
     path("<slug:slug>/work/<uuid:issue_id>/files/", FilesView.as_view()),

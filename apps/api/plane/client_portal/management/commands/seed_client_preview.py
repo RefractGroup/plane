@@ -44,8 +44,9 @@ class Command(BaseCommand):
             defaults={"username": "preview-client", "display_name": "Alex", "first_name": "Alex"},
         )
         for user in (staff, client):
-            user.set_password(password)
-            user.save()
+            if not user.check_password(password):
+                user.set_password(password)
+                user.save()
             Profile.objects.get_or_create(user=user, defaults={"is_onboarded": True})
         ws, _ = Workspace.objects.get_or_create(
             slug="client-preview", defaults={"name": "Local preview", "owner": staff}
@@ -60,6 +61,8 @@ class Command(BaseCommand):
         portal, _ = ClientPortal.objects.get_or_create(
             project=p, defaults={"name": "Example client", "slug": "example-client", "client_label": label}
         )
+        portal.performance_panels = ["website", "attribution"]
+        portal.save(update_fields=["performance_panels"])
         account, _ = ClientAccount.objects.get_or_create(user=client)
         ClientAccess.objects.get_or_create(portal=portal, account=account)
         records = [

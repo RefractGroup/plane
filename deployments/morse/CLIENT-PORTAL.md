@@ -4,19 +4,21 @@ The client interface is part of the same React Router web app and Django backend
 
 ## Native interface reuse
 
-The client shell follows the existing project tree and compact toolbar. It uses Plane's `Header`, `Row`, `Menu`, `Avatar`, `Badge`, `SidebarNavItem`, `SidebarAddButton` and icons. List rows and board cards use the existing issue-layout styling. Opening a work item keeps the list behind Plane's side-peek frame; the frame is extracted into `WorkItemPeekFrame` and used by both the original staff view and client view. Requests use the existing `ModalCore`.
+The client shell follows the existing project tree and compact toolbar. It uses Plane's `Header`, `Row`, `Menu`, `Avatar`, `Badge`, `SidebarNavItem`, `SidebarAddButton` and icons. List rows and board cards use the existing issue-layout styling. Opening a work item keeps the list behind Plane's side-peek frame; the frame is extracted into `WorkItemPeekFrame` and used by both the original staff view and client view. Requests use the existing `ModalCore`. Home reuses `UserGreetingsView` and the native dashboard width, spacing and header.
 
 Only client-relevant navigation and actions are exposed. The staff stores and their API fetching remain outside the client shell. Display controls support list/board, state grouping, priority/date visibility, collapsed groups, search and filtering.
 
 ## Client experience
 
-`/client/` opens a client's assigned workspaces. `/client/<slug>/work` shows shared work in list or board view. The project tree contains Work items, Pages and Requests, with account/sign-out below. Clients can read a task, reply in its external conversation, upload/download attachments, read shared documents and submit requests into Plane Intake. They cannot change project settings, tasks, labels or internal comments, or see the staff directory, assignees, cycles, outcomes, analytics or other clients.
+`/client/` opens a client's assigned workspaces, landing on Home when there is one workspace. `/client/<slug>/home` shows scoped work/request/page counts, active work and recently updated shared pages. `/client/<slug>/work` shows shared work in list or board view. The project tree contains Work items, Pages and Requests, with Home above and account/sign-out in the avatar menu. Clients can read a task, reply in its external conversation, upload/download attachments, read shared documents and submit requests into Plane Intake. They cannot change project settings, tasks, labels or internal comments, or see the staff directory, assignees, cycles, internal outcomes or other clients.
 
 Work is visible only with the configured **Client** label or a `ClientRequest` receipt for that portal. Deleted, archived and draft work is excluded. Documents must be selected explicitly, remain public within the project and retain their project link. Making a page private, archiving it, removing the share or revoking client access denies subsequent reads. A page's content revision hash changes with its title or HTML; this is not an approval workflow.
 
+Home can also show website performance and attribution panels. These are layout-only empty states: no provider integration, sample performance metrics or attribution claims are supplied. Staff choose which panels appear per client; existing portals default to neither. Work/page totals count the full authorised queryset, independently of list pagination.
+
 ## Staff controls
 
-A user who is an active workspace Admin **and** project Admin can manage that project's client portal at `/client/`. They can create the portal, select shared pages, grant/revoke access for an existing client account, inspect recent activity and open a read-only client preview.
+A user who is an active workspace Admin **and** project Admin can manage that project's client portal at `/client/`. They can create the portal, select shared pages and Home performance panels, grant/revoke access for an existing client account, inspect recent activity and open a read-only client preview.
 
 For portal-enabled projects, Plane's existing comment access selector is available in the internal task conversation. **Public/EXTERNAL** replies appear for clients when the task is shared. **Private/INTERNAL** remains the default. No mention convention or automatic email delivery is implemented.
 
@@ -62,12 +64,12 @@ Run `pnpm --filter web check:types`, the web build and the focused contract suit
 
 ```sh
 docker compose -p refract-client-ui -f docker-compose-test.yml run --rm api-tests \
-  pytest plane/tests/contract/api/test_client_portal.py \
+  pytest --create-db plane/tests/contract/api/test_client_portal.py \
   plane/tests/contract/api/test_portal_pages.py \
   plane/tests/contract/api/test_portal_attachments.py \
   plane/tests/contract/api/test_generic_asset.py
 ```
 
-`client_portal.0001_initial` is an additive migration. Apply it before serving the new code. Rehearse migration and verify the existing board/authentication on staging; take a database snapshot before a production deployment. The former backend revision can be redeployed with the new tables left in place, but the client route will then be unavailable. Keep original client accounts and URLs until the migration/pilot is separately verified.
+`client_portal.0001_initial` and `0002_clientportal_performance_panels` are additive migrations. Apply both before serving the new code. Rehearse migration and verify the existing board/authentication on staging; take a database snapshot before a production deployment. The former backend revision can be redeployed with the new tables left in place, but the client route will then be unavailable. Keep original client accounts and URLs until the migration/pilot is separately verified.
 
 This implementation is for review and staging. Production client migration, invitations, email delivery and approval workflows are separate rollout work.

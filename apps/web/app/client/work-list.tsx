@@ -68,7 +68,9 @@ export function ClientWorkList({
   const query = new URLSearchParams(location.search).get("q") || "";
   const [search, setSearch] = useState(query);
   const [searchOpen, setSearchOpen] = useState(!!query);
-  const [group, setGroup] = useState("");
+  const requestedGroup = new URLSearchParams(location.search).get("group") || "";
+  const [group, setGroup] = useState(groups.includes(requestedGroup) ? requestedGroup : "");
+  useEffect(() => setGroup(groups.includes(requestedGroup) ? requestedGroup : ""), [requestedGroup]);
   const [board, setBoard] = useState(false);
   const [grouped, setGrouped] = useState(true);
   const [showPriority, setShowPriority] = useState(true);
