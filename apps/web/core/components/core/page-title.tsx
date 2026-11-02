@@ -16,7 +16,7 @@ export function PageHead(props: PageHeadTitleProps) {
 
   useEffect(() => {
     if (title) {
-      document.title = title ?? "Morse Micro | Website and Content";
+      document.title = title ?? "Refract";
     }
   }, [title]);
 

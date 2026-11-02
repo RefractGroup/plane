@@ -4,13 +4,12 @@
  * See the LICENSE file for details.
  */
 
-export const SITE_NAME = "Morse Micro | Website and Content";
-export const SITE_TITLE = "Morse Micro | Website and Content";
-export const SITE_DESCRIPTION =
-  "Plan, review, and approve every change to morsemicro.com.";
+export const SITE_NAME = "Refract";
+export const SITE_TITLE = "Refract";
+export const SITE_DESCRIPTION = "Refract's projects and clients, in one place.";
 export const SITE_KEYWORDS =
   "software development, plan, ship, software, accelerate, code management, release management, project management, work items tracking, agile, scrum, kanban, collaboration";
-export const SITE_URL = "https://app.plane.so/";
+export const SITE_URL = "https://portal.refract.group/";
 export const TWITTER_USER_NAME = "Plane | Simple, extensible, open-source project management tool.";
 
 // Plane Sites Metadata
@@ -19,5 +18,5 @@ export const SPACE_SITE_TITLE = "Plane Publish | Make your Plane boards public w
 export const SPACE_SITE_DESCRIPTION = "Plane Publish is a customer feedback management tool built on top of plane.so";
 export const SPACE_SITE_KEYWORDS =
   "software development, customer feedback, software, accelerate, code management, release management, project management, work items tracking, agile, scrum, kanban, collaboration";
-export const SPACE_SITE_URL = "https://app.plane.so/";
+export const SPACE_SITE_URL = "https://portal.refract.group/";
 export const SPACE_TWITTER_USER_NAME = "planepowers";

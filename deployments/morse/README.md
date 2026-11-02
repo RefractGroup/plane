@@ -1,14 +1,14 @@
-# Morse Micro board
+# Refract board
 
-A Morse Micro-branded build of [Plane](https://github.com/makeplane/plane) Community Edition, run by Refract for the Morse Micro website and content programme.
+A Refract-branded build of [Plane](https://github.com/makeplane/plane) Community Edition. It serves the internal Refract workspace and the existing Morse Micro review workspace. The deployment folder and branch retain their original names.
 
 This branch (`morse`) is upstream `v1.4.3` plus a small set of changes, mostly frontend:
 
 - Brand colors use the eight Morse Micro brand colors (`packages/tailwind-config/variables.css`).
-- The Plane wordmark, icon, favicons and loading spinner show the Morse Micro logo.
+- The wordmark, icon, favicon and loading spinner show Refract's existing logo. The sign-in screen uses Refract copy without Plane's customer-logo promotion.
 - The "Star us on GitHub" link and the Community edition / paid plan badge are removed.
 - Kanban columns are 290px wide so four fit on a laptop screen.
-- The light theme is the default (people can still choose dark), and page titles read "Morse Micro | Website and Content".
+- The light theme is the default (people can still choose dark), and app and authentication titles use Refract.
 - Cards show two-line titles and short dates ("Nov 5"). The inline "New work item" rows are hidden.
 - The sidebar hides Stickies, Your work and Drafts.
 - Modules are called "Outcomes" in the English labels.

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  *
- * Modified for the Morse Micro board: shows the Morse Micro icon while loading.
+ * Modified for the Refract board: shows the Refract mark while loading.
  */
 
 import { PlaneLogo } from "@plane/propel/icons";
