@@ -5,6 +5,10 @@ import type { FormEvent, ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import {
   Home,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  LockKeyhole,
   ChevronRight,
   ChevronDown,
   Globe,
@@ -68,6 +72,8 @@ function Html({ value }: { value: string }) {
 
 function Login() {
   const [token, setToken] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
     csrf()
@@ -76,54 +82,95 @@ function Login() {
   }, []);
   const failed = new URLSearchParams(useLocation().search).has("error_code");
   return (
-    <div className="client-portal flex min-h-screen flex-col bg-canvas p-8 text-primary">
-      <div className="flex items-center gap-2">
-        <PlaneLogo width={28} height={28} />
-        <span className="text-20 font-semibold">Refract</span>
-      </div>
-      <div className="mx-auto my-auto w-full max-w-sm py-12">
-        <h1 className="text-24 font-semibold">Welcome back</h1>
-        <p className="mt-2 mb-7 text-14 text-secondary">Sign in to your client workspace.</p>
-        {(error || failed) && (
-          <ErrorMessage error={error || "We couldn’t sign you in. Check your email and password and try again."} />
-        )}
-        <form action="/auth/sign-in/" method="post" className="mt-4 space-y-4">
-          <input type="hidden" name="csrfmiddlewaretoken" value={token} />
-          <input type="hidden" name="next_path" value="/client/" />
-          <label htmlFor="client-email" className="block text-13">
-            Email
-            <Input
-              id="client-email"
-              className="mt-2 w-full"
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              placeholder="you@company.com"
-            />
-          </label>
-          <label htmlFor="client-password" className="block text-13">
-            Password
-            <Input
-              id="client-password"
-              className="mt-2 w-full"
-              name="password"
-              type="password"
-              required
-              autoComplete="current-password"
-            />
-          </label>
-          <Button type="submit" className="w-full" disabled={!token}>
-            Sign in
-          </Button>
-        </form>
-        <a href="/accounts/forgot-password/" className="mt-4 block text-center text-13 text-secondary underline">
-          Forgot password?
-        </a>
-        <p className="mt-8 text-center text-12 text-tertiary">
-          Access is by invitation. Contact your Refract team if you need help.
-        </p>
-      </div>
+    <div className="client-portal client-login flex min-h-dvh flex-col bg-canvas text-primary">
+      <header className="flex items-center justify-between px-6 py-6 sm:px-10">
+        <div className="flex items-center gap-2.5">
+          <PlaneLogo width={27} height={27} />
+          <span className="text-20 font-semibold tracking-tight">Refract</span>
+        </div>
+        <span className="text-12 text-tertiary">Client workspace</span>
+      </header>
+      <main className="flex flex-1 items-center justify-center px-5 py-10 sm:pb-24">
+        <div className="w-full max-w-[420px]">
+          <div className="client-login-card rounded-xl border border-subtle bg-surface-1 p-7 sm:p-9">
+            <div className="client-home-icon mb-6 flex size-11 items-center justify-center rounded-xl border border-subtle text-accent-primary">
+              <LockKeyhole size={20} strokeWidth={1.5} aria-hidden="true" />
+            </div>
+            <h1 className="text-[28px] leading-tight font-semibold tracking-tight">Welcome back</h1>
+            <p className="mt-2 text-14 leading-relaxed text-secondary">
+              Your projects, updates and conversations.
+              <br />
+              All in one place.
+            </p>
+            {(error || failed) && (
+              <div className="mt-5">
+                <ErrorMessage
+                  error={error || "We couldn’t sign you in. Check your email and password and try again."}
+                />
+              </div>
+            )}
+            <form action="/auth/sign-in/" method="post" className="mt-7 space-y-5" onSubmit={() => setSigningIn(true)}>
+              <input type="hidden" name="csrfmiddlewaretoken" value={token} />
+              <input type="hidden" name="next_path" value="/client/" />
+              <label htmlFor="client-email" className="block text-13 font-medium">
+                Email address
+                <Input
+                  id="client-email"
+                  className="client-auth-input mt-2 w-full"
+                  name="email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  placeholder="you@company.com"
+                />
+              </label>
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-3 text-13">
+                  <label htmlFor="client-password" className="font-medium">
+                    Password
+                  </label>
+                  <a href="/accounts/forgot-password/" className="text-12 text-secondary hover:text-accent-primary">
+                    Forgot password?
+                  </a>
+                </div>
+                <div className="relative">
+                  <Input
+                    id="client-password"
+                    className="client-auth-input w-full pr-11"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    autoComplete="current-password"
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-1 flex w-9 items-center justify-center rounded-md text-tertiary hover:text-primary"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showPassword}
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+              <Button
+                type="submit"
+                size="lg"
+                className="client-sign-in w-full justify-center gap-2"
+                disabled={!token || signingIn}
+              >
+                {signingIn ? "Signing in…" : "Sign in"}
+                <ArrowRight size={15} aria-hidden="true" />
+              </Button>
+            </form>
+            <div className="mt-7 border-t border-subtle pt-5 text-12 leading-relaxed text-tertiary">
+              Need access? <span className="text-secondary">Contact your Refract team.</span>
+            </div>
+          </div>
+          <p className="mt-6 text-center text-12 text-tertiary">A shared space for you and your Refract team.</p>
+        </div>
+      </main>
     </div>
   );
 }
@@ -295,7 +342,7 @@ export default function ClientPortalPage() {
         >
           <div className="flex flex-col gap-3 px-3">
             <div className="flex items-center justify-between gap-2 px-2">
-              <span className="pt-1 text-16 font-medium">Projects</span>
+              <span className="pt-1 text-16 font-medium">Workspace</span>
               <IconButton
                 aria-label="Collapse sidebar"
                 variant="ghost"
@@ -395,9 +442,9 @@ export default function ClientPortalPage() {
           ) : section === "home" ? (
             <ClientHome slug={slug} suffix={suffix} name={user.name} />
           ) : section === "account" ? (
-            <div className="mx-auto max-w-3xl p-8">
+            <div className="mx-auto max-w-3xl px-6 py-10 sm:px-8">
               <h1 className="mb-8 text-24 font-medium">My account</h1>
-              <dl className="space-y-5 text-14">
+              <dl className="client-surface divide-y divide-subtle rounded-lg border border-subtle px-6 text-14 [&>div]:py-5">
                 <div>
                   <dt className="text-secondary">Name</dt>
                   <dd className="mt-1">{user.name}</dd>
@@ -465,8 +512,10 @@ function Documents({ slug, id, suffix }: { slug: string; id?: string; suffix: st
           <Loading />
         ) : (
           <article className="mx-auto max-w-4xl px-6 py-12 sm:px-12">
-            <FileText size={32} className="mb-5 text-tertiary" />
-            <h1 className="text-30 mb-3 font-semibold">{detail.data.name}</h1>
+            <div className="client-home-icon mb-6 flex size-12 items-center justify-center rounded-lg border border-subtle text-accent-primary">
+              <FileText size={24} strokeWidth={1.5} />
+            </div>
+            <h1 className="mb-3 text-[30px] leading-tight font-semibold tracking-tight">{detail.data.name}</h1>
             <p className="mb-10 text-12 text-tertiary">Updated {shortDate(detail.data.updated_at)}</p>
             <Html value={detail.data.description_html || ""} />
           </article>
@@ -476,22 +525,26 @@ function Documents({ slug, id, suffix }: { slug: string; id?: string; suffix: st
       ) : !list.data.results.length ? (
         <Message>Your team hasn’t shared any documents yet.</Message>
       ) : (
-        <div className="px-page-x py-4">
-          <div className="mb-3 grid grid-cols-[1fr_auto] border-b border-subtle-1 px-3 pb-3 text-12 text-tertiary">
-            <span>Name</span>
-            <span>Updated</span>
+        <div className="px-page-x py-6">
+          <div className="client-surface overflow-hidden rounded-lg border border-subtle">
+            <div className="grid grid-cols-[1fr_auto] border-b border-subtle px-4 py-3 text-12 text-tertiary">
+              <span>Name</span>
+              <span>Updated</span>
+            </div>
+            {list.data.results.map((doc) => (
+              <Link
+                key={doc.id}
+                className="client-document-row group flex min-h-11 items-center gap-3 border-b border-subtle px-4 py-3 last:border-b-0 hover:bg-layer-transparent-hover"
+                to={`/client/${slug}/documents/${doc.id}${suffix}`}
+              >
+                <span className="client-home-icon flex size-8 shrink-0 items-center justify-center rounded-md border border-subtle text-secondary">
+                  <FileText size={16} strokeWidth={1.5} />
+                </span>
+                <span className="min-w-0 flex-1 truncate text-14">{doc.name}</span>
+                <span className="shrink-0 text-12 text-tertiary">{shortDate(doc.updated_at)}</span>
+              </Link>
+            ))}
           </div>
-          {list.data.results.map((doc) => (
-            <Link
-              key={doc.id}
-              className="flex min-h-11 items-center gap-3 border-b border-subtle px-3 py-3 hover:bg-layer-transparent-hover"
-              to={`/client/${slug}/documents/${doc.id}${suffix}`}
-            >
-              <FileText size={18} className="text-tertiary" />
-              <span className="min-w-0 flex-1 truncate text-14">{doc.name}</span>
-              <span className="text-12 text-tertiary">{shortDate(doc.updated_at)}</span>
-            </Link>
-          ))}
         </div>
       )}
     </>
@@ -522,11 +575,12 @@ function ClientTaskPeek(props: { slug: string; id: string; suffix: string; previ
         }
       }}
     >
-      <div className="flex shrink-0 items-center gap-4 p-4">
-        <button aria-label="Close work item" onClick={close}>
+      <div className="flex h-12 shrink-0 items-center gap-1 border-b border-subtle px-3">
+        <button className="client-icon-control" aria-label="Close work item" onClick={close}>
           <MoveRight className="size-4 text-tertiary hover:text-secondary" />
         </button>
         <button
+          className="client-icon-control"
           aria-label={expanded ? "Return to side peek" : "Expand work item"}
           onClick={() => setExpanded(!expanded)}
         >
@@ -571,13 +625,13 @@ function TaskDetail({ slug, id, suffix, preview }: { slug: string; id: string; s
   if (!data) return <Loading />;
   return (
     <>
-      <article className="min-w-0 px-8 py-5">
+      <article className="client-task min-w-0 px-5 py-6 sm:px-8">
         <p className="mb-2 text-12 text-tertiary">#{data.sequence}</p>
         <h1 className="mb-3 text-20 font-semibold">{data.name}</h1>
         <Html value={data.description_html} />
-        <section className="mt-7 mb-8">
+        <section className="my-7 border-y border-subtle py-5">
           <h2 className="mb-5 text-13 font-medium">Properties</h2>
-          <dl className="space-y-5 text-13">
+          <dl className="space-y-4 text-13">
             <div className="grid grid-cols-[135px_1fr] items-center gap-0">
               <dt className="flex items-center gap-2 text-tertiary">
                 <Circle size={15} />
@@ -621,7 +675,7 @@ function TaskDetail({ slug, id, suffix, preview }: { slug: string; id: string; s
                 <a
                   key={f.id}
                   href={`${f.url}${suffix}`}
-                  className="flex w-fit max-w-full items-center gap-2 rounded border border-subtle-1 px-3 py-2 text-13"
+                  className="client-surface flex w-fit max-w-full items-center gap-2 rounded-md border border-subtle px-3 py-2.5 text-13 hover:border-strong"
                 >
                   <Paperclip size={14} />
                   <span className="truncate">{f.name}</span>
@@ -633,7 +687,7 @@ function TaskDetail({ slug, id, suffix, preview }: { slug: string; id: string; s
             <p className="text-13 text-tertiary">No attachments</p>
           )}
           {!preview && (
-            <label className="mt-4 inline-flex cursor-pointer items-center gap-2 text-12 text-secondary">
+            <label className="focus-within:outline-accent-primary mt-4 inline-flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-subtle px-3 py-2 text-12 text-secondary focus-within:outline-2 hover:border-strong">
               <Plus size={14} />
               Add attachment<span className="text-tertiary">· up to 10 MB</span>
               <input
@@ -673,7 +727,7 @@ function TaskDetail({ slug, id, suffix, preview }: { slug: string; id: string; s
           {data.comments.length ? (
             data.comments.map((c) => (
               <div key={c.id} className="mb-6 flex gap-3">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-layer-2 text-11">
+                <div className="client-home-icon flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-subtle text-11 text-accent-primary">
                   {c.author[0]}
                 </div>
                 <div className="min-w-0">
@@ -690,7 +744,7 @@ function TaskDetail({ slug, id, suffix, preview }: { slug: string; id: string; s
           )}
           {failure && <ErrorMessage error={failure} />}{" "}
           {!preview && (
-            <form onSubmit={reply} className="mt-4 rounded-md border border-subtle-1">
+            <form onSubmit={reply} className="client-surface client-composer mt-4 rounded-lg border border-subtle">
               <textarea
                 aria-label="Reply to your team"
                 placeholder="Add comment"
@@ -704,7 +758,7 @@ function TaskDetail({ slug, id, suffix, preview }: { slug: string; id: string; s
                   operation.current = crypto.randomUUID();
                 }}
               />
-              <div className="flex items-center justify-between border-t border-subtle-1 px-3 py-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-subtle px-3 py-2.5">
                 <span className="text-11 text-tertiary">Shared with your Refract team</span>
                 <Button type="submit" size="sm" disabled={busy || !body.trim()}>
                   {busy ? "Saving..." : "Comment"}
@@ -741,13 +795,16 @@ function RequestForm({ slug, preview }: { slug: string; preview: boolean }) {
   return (
     <>
       <div className="flex h-11 items-center justify-between border-b border-subtle px-page-x text-14">
-        <Dialog.Title>New request</Dialog.Title>
-        <Link to={`/client/${slug}/requests`} aria-label="Close request">
+        <Dialog.Title className="flex items-center gap-2 font-medium">
+          <IntakeIcon className="size-4 text-secondary" />
+          New request
+        </Dialog.Title>
+        <Link to={`/client/${slug}/requests`} aria-label="Close request" className="client-icon-control">
           <X size={18} />
         </Link>
       </div>
       <form
-        className="space-y-5 p-6"
+        className="client-request space-y-5 p-6"
         onSubmit={submit}
         onChange={() => {
           operation.current = crypto.randomUUID();
@@ -762,7 +819,7 @@ function RequestForm({ slug, preview }: { slug: string; preview: boolean }) {
             placeholder="Request title"
             maxLength={255}
             required
-            className="w-full border-0 bg-transparent px-0 text-20 font-medium shadow-none"
+            className="min-h-11 w-full border-0 bg-transparent px-0 text-20 font-medium shadow-none"
           />
         </label>
         <label className="block text-13">
@@ -773,7 +830,7 @@ function RequestForm({ slug, preview }: { slug: string; preview: boolean }) {
             maxLength={20000}
             required
             rows={7}
-            className="w-full resize-y bg-transparent text-14 outline-none"
+            className="client-surface w-full resize-y rounded-lg border border-subtle bg-transparent p-3 text-14 leading-relaxed outline-none"
           />
         </label>
         <div className="flex flex-wrap gap-6">
@@ -781,7 +838,7 @@ function RequestForm({ slug, preview }: { slug: string; preview: boolean }) {
             Priority
             <select
               name="priority"
-              className="mt-2 block rounded-md border border-subtle-1 bg-canvas px-3 py-2 text-13"
+              className="mt-2 block rounded-md border border-subtle-1 bg-surface-1 px-3 py-2 text-13"
             >
               <option value="none">No priority</option>
               <option value="low">Low</option>
@@ -795,11 +852,16 @@ function RequestForm({ slug, preview }: { slug: string; preview: boolean }) {
             <Input id="request-date" type="date" name="due_date" className="mt-2" />
           </label>
         </div>
-        <div className="flex justify-end gap-3">
-          <Button variant="secondary" onClick={() => navigate(`/client/${slug}/requests`)}>
+        <div className="flex justify-end gap-3 border-t border-subtle pt-5">
+          <Button
+            size="lg"
+            className="min-h-9"
+            variant="secondary"
+            onClick={() => navigate(`/client/${slug}/requests`)}
+          >
             Cancel
           </Button>
-          <Button type="submit" disabled={busy}>
+          <Button type="submit" size="lg" className="min-h-9" disabled={busy}>
             {busy ? "Submitting..." : "Submit request"}
           </Button>
         </div>
@@ -907,7 +969,7 @@ function WorkspacePicker({ session, reload, manage }: { session: Session; reload
             <p className="text-12 text-secondary">
               Tasks carrying the Client label will be visible. Documents and people are selected separately.
             </p>
-            <Button type="submit" disabled={busy}>
+            <Button type="submit" size="lg" className="min-h-9" disabled={busy}>
               Create client workspace
             </Button>
           </form>

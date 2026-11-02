@@ -128,3 +128,73 @@
     transform: none !important;
   }
 }
+
+/* Small raised surfaces across client-only screens, with native Plane colours. */
+.client-surface {
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 4%),
+    0 4px 12px -4px rgb(15 23 42 / 7%);
+}
+.client-login {
+  background-image: radial-gradient(ellipse at 50% 30%, rgb(110 68 255 / 4%), transparent 65%);
+}
+.client-login-card {
+  box-shadow:
+    0 2px 4px rgb(15 23 42 / 3%),
+    0 16px 48px -16px rgb(15 23 42 / 14%);
+}
+.client-login .client-auth-input {
+  height: 44px;
+  border: 1px solid var(--border-subtle, #e4e4e7);
+  border-radius: 7px;
+  padding-left: 12px;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 3%);
+}
+.client-login .client-sign-in {
+  height: 44px;
+  border-radius: 7px;
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 12%),
+    0 3px 8px -3px rgb(80 35 110 / 24%);
+}
+.client-icon-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+}
+.client-icon-control:hover {
+  background: rgb(110 68 255 / 5%);
+}
+.client-task .client-rich-text {
+  font-size: 14px;
+  line-height: 1.65;
+}
+.client-task .client-rich-text h1 {
+  font-size: 22px;
+}
+.client-task .client-rich-text h2 {
+  font-size: 18px;
+}
+.client-task .client-rich-text h3 {
+  font-size: 16px;
+}
+.client-composer:focus-within {
+  border-color: rgb(110 68 255 / 40%);
+  box-shadow: 0 0 0 3px rgb(110 68 255 / 6%);
+}
+.client-board-card {
+  transition: box-shadow 180ms ease;
+}
+.client-board-card:hover {
+  box-shadow:
+    0 2px 4px rgb(15 23 42 / 5%),
+    0 8px 20px -6px rgb(15 23 42 / 12%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .client-board-card {
+    transition: none;
+  }
+}

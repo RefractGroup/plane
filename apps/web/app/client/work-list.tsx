@@ -199,7 +199,7 @@ export function ClientWorkList({
           <LogoSpinner />
         </div>
       ) : !data.results.length ? (
-        <p className="p-8 text-13 text-tertiary">
+        <p className="mx-auto max-w-md px-8 py-16 text-center text-13 leading-relaxed text-tertiary">
           {search || group
             ? "No work items match these filters."
             : requests
@@ -231,7 +231,9 @@ export function ClientWorkList({
                     <span className="truncate text-14 font-medium">
                       {g === "all" ? "All work items" : groupNames[g]}
                     </span>
-                    <span className="pl-1 text-13 text-tertiary">{items.length}</span>
+                    <span className="ml-1 inline-flex min-w-5 justify-center rounded border border-subtle px-1 text-11 text-tertiary tabular-nums">
+                      {items.length}
+                    </span>
                     <ChevronDown
                       className={`ml-auto size-3.5 text-tertiary opacity-0 group-hover/list-header:opacity-100 ${closed ? "-rotate-90 opacity-100" : ""}`}
                     />
@@ -308,7 +310,7 @@ function NativeWorkRow({
     return (
       <Link
         to={href}
-        className="group/kanban-block mb-2 block w-full rounded-lg border border-subtle bg-layer-2 p-3 text-13 shadow-raised-100 transition-all hover:border-strong hover:shadow-raised-200"
+        className="client-surface client-board-card group/kanban-block mb-3 block w-full rounded-lg border border-subtle bg-surface-1 p-3.5 text-13 hover:border-strong"
       >
         <div className="space-y-2">
           <span className="text-12 text-tertiary">#{item.sequence}</span>
@@ -321,7 +323,7 @@ function NativeWorkRow({
     <Link to={href} className="block w-full cursor-pointer">
       <Row className="group/list-block relative flex min-h-11 flex-col gap-3 border-b border-subtle bg-layer-transparent py-3 text-13 transition-colors hover:bg-layer-transparent-hover sm:flex-row sm:items-center">
         <div className="flex min-w-0 flex-1 items-center gap-0.5">
-          <span className="size-4 shrink-0" />
+          <span className="mr-2 w-8 shrink-0 text-11 text-tertiary tabular-nums">#{item.sequence}</span>
           <p className="truncate text-body-xs-medium text-primary">{item.name}</p>
         </div>
         {properties}
