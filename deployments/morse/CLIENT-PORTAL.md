@@ -2,9 +2,15 @@
 
 The client interface is part of the same React Router web app and Django backend as Plane. It shares Plane's typography, theme, sidebar navigation component, buttons, inputs, status/priority icons and authentication session. There is no separate Vercel or Supabase app.
 
+## Native interface reuse
+
+The client shell follows the existing project tree and compact toolbar. It uses Plane's `Header`, `Row`, `Menu`, `Avatar`, `Badge`, `SidebarNavItem`, `SidebarAddButton` and icons. List rows and board cards use the existing issue-layout styling. Opening a work item keeps the list behind Plane's side-peek frame; the frame is extracted into `WorkItemPeekFrame` and used by both the original staff view and client view. Requests use the existing `ModalCore`.
+
+Only client-relevant navigation and actions are exposed. The staff stores and their API fetching remain outside the client shell. Display controls support list/board, state grouping, priority/date visibility, collapsed groups, search and filtering.
+
 ## Client experience
 
-`/client/` opens a client's assigned workspaces. `/client/<slug>/work` shows shared work in list or board view. The sidebar contains Work, Documents and Requests, with account/sign-out below. Clients can read a task, reply in its external conversation, upload/download attachments, read shared documents and submit requests into Plane Intake. They cannot change project settings, tasks, labels or internal comments, or see the staff directory, assignees, cycles, outcomes, analytics or other clients.
+`/client/` opens a client's assigned workspaces. `/client/<slug>/work` shows shared work in list or board view. The project tree contains Work items, Pages and Requests, with account/sign-out below. Clients can read a task, reply in its external conversation, upload/download attachments, read shared documents and submit requests into Plane Intake. They cannot change project settings, tasks, labels or internal comments, or see the staff directory, assignees, cycles, outcomes, analytics or other clients.
 
 Work is visible only with the configured **Client** label or a `ClientRequest` receipt for that portal. Deleted, archived and draft work is excluded. Documents must be selected explicitly, remain public within the project and retain their project link. Making a page private, archiving it, removing the share or revoking client access denies subsequent reads. A page's content revision hash changes with its title or HTML; this is not an approval workflow.
 
