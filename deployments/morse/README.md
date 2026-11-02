@@ -12,7 +12,7 @@ This branch (`morse`) is upstream `v1.4.3` plus a small set of changes, mostly f
 - Cards show two-line titles and short dates ("Nov 5"). The inline "New work item" rows are hidden.
 - The sidebar hides Stickies, Your work and Drafts.
 - Modules are called "Outcomes" in the English labels.
-- New members start on a simple list grouped by category, showing only status, date and outcome. This is the one backend change: `apps/api/plane/db/models/issue.py` is copied into the image.
+- New members start on a simple list grouped by category, showing only status, date and outcome. These defaults live in `apps/api/plane/db/models/issue.py`.
 - Links between board pages open in the same tab. Cmd, Ctrl or Shift click still opens a new tab.
 - The pages list sorts oldest first, so the plan comes first and the numbered strategy pages follow in order.
 - `/morsemicro` is a short link to the board. It redirects to `MORSE_SHORT_LINK_TARGET`, a path set in the service variables, or to the workspace home if that isn't set.
@@ -21,7 +21,7 @@ This branch (`morse`) is upstream `v1.4.3` plus a small set of changes, mostly f
 
 ## How it is built
 
-`deployments/morse/Dockerfile` rebuilds only the web app from this branch, using the same build settings as upstream `apps/web/Dockerfile.web`. The API, workers, realtime server and proxy come from the official `makeplane/plane-aio-community` image of the same version, with the one model file above copied over. The proxy runs that image's Caddy with our `Caddyfile`, which is upstream's `apps/proxy/Caddyfile.aio.ce` plus the short link, the cache header and the old-address redirect.
+`deployments/morse/Dockerfile` rebuilds the web app and copies the complete pinned backend package (`apps/api/plane`) from this branch into the matching official runtime image. The API and workers therefore execute our fork, including the document API and file-access checks. Runtime dependencies, the realtime server and proxy remain from the official `makeplane/plane-aio-community` image of the same version. Backend dependency or migration changes must be reviewed against that pinned runtime before upgrading. The proxy runs that image's Caddy with our `Caddyfile`, which is upstream's `apps/proxy/Caddyfile.aio.ce` plus the short link, the cache header and the old-address redirect.
 
 `supervisor.conf` is upstream's all-in-one process config with logs sent to stdout, a capped Celery worker concurrency (`CELERY_WORKER_CONCURRENCY`, default 2), and an idempotent admin bootstrap (`morse_bootstrap_admin.py`) so `/god-mode` is never left unclaimed.
 
@@ -45,3 +45,11 @@ To update (this is how v1.4.2 went to v1.4.3 on 2 November 2026):
 ## License
 
 Plane is licensed under AGPL-3.0. These modifications are published in this public repository under the same license.
+
+## Client portal API additions
+
+The authenticated v1 API includes read-only project pages at `projects/{project_id}/pages/`, page detail at `pages/{page_id}/`, and protected image/file redirects at `pages/{page_id}/assets/{asset_id}/`. These require active workspace membership and project Member/Admin access. Private, archived, moved and removed pages are excluded. Responses omit staff identities; detail includes live HTML, a content revision hash and bound asset metadata. The separate portal must still enforce its explicit client sharing allowlist.
+
+Attachment APIs verify project membership and bind every asset to the work item in the URL. Generic asset routes also check the asset's project and private-page access. No schema migration is required.
+
+Run the contract tests in `plane/tests/contract/api/test_portal_pages.py`, `test_portal_attachments.py` and `test_generic_asset.py` using the isolated Docker test stack before changing these routes. After deployment, repeat the synthetic integration checks from the private portal repository.

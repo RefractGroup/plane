@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 # Morse Micro board: Plane Community Edition with a rebuilt, Morse-branded web app.
-# Everything except the web app comes from the official all-in-one image of the same version.
+# Runtime dependencies come from the matching official image; our web and backend source ship together.
 ARG PLANE_VERSION=v1.4.3
 
 FROM node:22-alpine AS base
@@ -47,5 +47,5 @@ COPY --from=web /app/apps/web/build/client /app/web
 COPY deployments/morse/supervisor.conf /etc/supervisor/conf.d/supervisor.conf
 COPY deployments/morse/Caddyfile /app/proxy/Caddyfile
 COPY deployments/morse/morse_bootstrap_admin.py /app/backend/plane/db/management/commands/morse_bootstrap_admin.py
-# Simple default view for new members (same file as upstream v1.4.3 plus new defaults)
-COPY apps/api/plane/db/models/issue.py /app/backend/plane/db/models/issue.py
+# Ship the pinned fork backend too, so tested API changes reach the running service.
+COPY apps/api/plane /app/backend/plane

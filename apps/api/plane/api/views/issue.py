@@ -1806,6 +1806,8 @@ class IssueActivityDetailAPIEndpoint(BaseAPIView):
 class IssueAttachmentListCreateAPIEndpoint(BaseAPIView):
     """Issue Attachment List and Create Endpoint"""
 
+    permission_classes = [ProjectEntityPermission]
+
     serializer_class = IssueAttachmentSerializer
     model = FileAsset
     use_read_replica = True
@@ -2012,6 +2014,8 @@ class IssueAttachmentListCreateAPIEndpoint(BaseAPIView):
             workspace__slug=slug,
             project_id=project_id,
             is_uploaded=True,
+            is_deleted=False,
+            is_archived=False,
         )
         # Serialize the attachments
         serializer = IssueAttachmentSerializer(issue_attachments, many=True)
@@ -2020,6 +2024,8 @@ class IssueAttachmentListCreateAPIEndpoint(BaseAPIView):
 
 class IssueAttachmentDetailAPIEndpoint(BaseAPIView):
     """Issue Attachment Detail Endpoint"""
+
+    permission_classes = [ProjectEntityPermission]
 
     serializer_class = IssueAttachmentSerializer
     model = FileAsset
@@ -2056,7 +2062,15 @@ class IssueAttachmentDetailAPIEndpoint(BaseAPIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        issue_attachment = FileAsset.objects.get(pk=pk, workspace__slug=slug, project_id=project_id)
+        issue_attachment = FileAsset.objects.get(
+            pk=pk,
+            workspace__slug=slug,
+            project_id=project_id,
+            issue_id=issue_id,
+            entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
+            is_deleted=False,
+            is_archived=False,
+        )
         issue_attachment.is_deleted = True
         issue_attachment.deleted_at = timezone.now()
         issue_attachment.save()
@@ -2130,7 +2144,15 @@ class IssueAttachmentDetailAPIEndpoint(BaseAPIView):
             )
 
         # Get the asset
-        asset = FileAsset.objects.get(id=pk, workspace__slug=slug, project_id=project_id)
+        asset = FileAsset.objects.get(
+            id=pk,
+            workspace__slug=slug,
+            project_id=project_id,
+            issue_id=issue_id,
+            entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
+            is_deleted=False,
+            is_archived=False,
+        )
 
         # Check if the asset is uploaded
         if not asset.is_uploaded:
@@ -2194,7 +2216,15 @@ class IssueAttachmentDetailAPIEndpoint(BaseAPIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        issue_attachment = FileAsset.objects.get(pk=pk, workspace__slug=slug, project_id=project_id)
+        issue_attachment = FileAsset.objects.get(
+            pk=pk,
+            workspace__slug=slug,
+            project_id=project_id,
+            issue_id=issue_id,
+            entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
+            is_deleted=False,
+            is_archived=False,
+        )
         serializer = IssueAttachmentSerializer(issue_attachment)
 
         # Send this activity only if the attachment is not uploaded before

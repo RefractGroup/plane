@@ -8,6 +8,7 @@ import uuid
 # Django Imports
 from django.utils import timezone
 from django.conf import settings
+from django.db.models import Q
 
 # Third party imports
 from rest_framework import status
@@ -18,7 +19,7 @@ from drf_spectacular.utils import OpenApiExample, OpenApiRequest
 from plane.bgtasks.storage_metadata_task import get_asset_object_metadata
 from plane.settings.storage import S3Storage
 from plane.utils.path_validator import sanitize_filename
-from plane.db.models import FileAsset, User, Workspace
+from plane.db.models import FileAsset, User, Workspace, ProjectMember, Page
 from plane.app.permissions import WorkspaceUserPermission
 from plane.api.views.base import BaseAPIView
 from plane.api.serializers import (
@@ -402,6 +403,37 @@ class UserServerAssetEndpoint(BaseAPIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+def can_access_project_asset(user, asset):
+    """A workspace token must not bypass a file's project or private-page boundary."""
+    if asset.is_archived:
+        return False
+    if (
+        asset.project_id
+        and not ProjectMember.objects.filter(
+            workspace_id=asset.workspace_id,
+            project_id=asset.project_id,
+            member=user,
+            is_active=True,
+            project__archived_at__isnull=True,
+            project__deleted_at__isnull=True,
+        ).exists()
+    ):
+        return False
+    if (
+        asset.page_id
+        and not Page.objects.filter(
+            Q(access=Page.PUBLIC_ACCESS) | Q(owned_by=user),
+            id=asset.page_id,
+            workspace_id=asset.workspace_id,
+            archived_at__isnull=True,
+            project_pages__project_id=asset.project_id,
+            project_pages__deleted_at__isnull=True,
+        ).exists()
+    ):
+        return False
+    return True
+
+
 class GenericAssetEndpoint(BaseAPIView):
     """This endpoint is used to upload generic assets that can be later bound to entities."""
 
@@ -437,6 +469,9 @@ class GenericAssetEndpoint(BaseAPIView):
             # Get the asset
             asset = FileAsset.objects.get(id=asset_id, workspace_id=workspace.id, is_deleted=False)
 
+            if not can_access_project_asset(request.user, asset):
+                return Response({"error": "Asset not found"}, status=status.HTTP_404_NOT_FOUND)
+
             # Check if the asset exists and is uploaded
             if not asset.is_uploaded:
                 return Response(
@@ -448,11 +483,9 @@ class GenericAssetEndpoint(BaseAPIView):
             # Force attachment disposition for script-capable MIME types (e.g. SVG)
             # to prevent same-origin XSS when the asset URL shares the app's origin
             # (default MinIO self-hosted setup).
-            storage = S3Storage(request=request, is_server=True)
+            storage = S3Storage(request=request)
             asset_mime_type = (asset.attributes.get("type") or "").split(";")[0].strip().lower()
-            disposition = (
-                "attachment" if asset_mime_type in settings.SCRIPT_CAPABLE_MIME_TYPES else "inline"
-            )
+            disposition = "attachment" if asset_mime_type in settings.SCRIPT_CAPABLE_MIME_TYPES else "inline"
             presigned_url = storage.generate_presigned_url(
                 object_name=asset.asset.name,
                 filename=asset.attributes.get("name"),
@@ -542,6 +575,19 @@ class GenericAssetEndpoint(BaseAPIView):
         # Get the workspace
         workspace = Workspace.objects.get(slug=slug)
 
+        if (
+            project_id
+            and not ProjectMember.objects.filter(
+                workspace=workspace,
+                project_id=project_id,
+                member=request.user,
+                is_active=True,
+                project__archived_at__isnull=True,
+                project__deleted_at__isnull=True,
+            ).exists()
+        ):
+            return Response({"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND)
+
         # asset key
         asset_key = f"{workspace.id}/{uuid.uuid4().hex}-{name}"
 
@@ -549,6 +595,8 @@ class GenericAssetEndpoint(BaseAPIView):
         if external_id and external_source:
             existing_asset = FileAsset.objects.filter(
                 workspace__slug=slug,
+                project_id=project_id,
+                created_by=request.user,
                 external_source=external_source,
                 external_id=external_id,
                 is_deleted=False,
@@ -578,7 +626,7 @@ class GenericAssetEndpoint(BaseAPIView):
         )
 
         # Get the presigned URL
-        storage = S3Storage(request=request, is_server=True)
+        storage = S3Storage(request=request)
         presigned_url = storage.generate_presigned_post(object_name=asset_key, file_type=type, file_size=size_limit)
 
         return Response(
@@ -619,6 +667,9 @@ class GenericAssetEndpoint(BaseAPIView):
         """
         try:
             asset = FileAsset.objects.get(id=asset_id, workspace__slug=slug, is_deleted=False)
+
+            if not can_access_project_asset(request.user, asset):
+                return Response({"error": "Asset not found"}, status=status.HTTP_404_NOT_FOUND)
 
             # Update is_uploaded status
             asset.is_uploaded = request.data.get("is_uploaded", asset.is_uploaded)
