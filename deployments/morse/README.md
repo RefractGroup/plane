@@ -2,7 +2,7 @@
 
 A Morse Micro-branded build of [Plane](https://github.com/makeplane/plane) Community Edition, run by Refract for the Morse Micro website and content programme.
 
-This branch (`morse`) is upstream `v1.4.2` plus a small set of changes, mostly frontend:
+This branch (`morse`) is upstream `v1.4.3` plus a small set of changes, mostly frontend:
 
 - Brand colors use the eight Morse Micro brand colors (`packages/tailwind-config/variables.css`).
 - The Plane wordmark, icon, favicons and loading spinner show the Morse Micro logo.

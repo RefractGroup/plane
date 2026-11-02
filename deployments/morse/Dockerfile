@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 # Morse Micro board: Plane Community Edition with a rebuilt, Morse-branded web app.
 # Everything except the web app comes from the official all-in-one image of the same version.
-ARG PLANE_VERSION=v1.4.2
+ARG PLANE_VERSION=v1.4.3
 
 FROM node:22-alpine AS base
 RUN apk add --no-cache libc6-compat
@@ -12,7 +12,7 @@ RUN corepack enable
 # Prune the monorepo down to the web app and its workspace dependencies
 FROM base AS pruner
 WORKDIR /app
-ARG TURBO_VERSION=2.9.18
+ARG TURBO_VERSION=2.10.11
 RUN corepack enable pnpm && pnpm add -g turbo@${TURBO_VERSION}
 COPY . .
 RUN turbo prune --scope=web --docker
@@ -47,5 +47,5 @@ COPY --from=web /app/apps/web/build/client /app/web
 COPY deployments/morse/supervisor.conf /etc/supervisor/conf.d/supervisor.conf
 COPY deployments/morse/Caddyfile /app/proxy/Caddyfile
 COPY deployments/morse/morse_bootstrap_admin.py /app/backend/plane/db/management/commands/morse_bootstrap_admin.py
-# Simple default view for new members (same file as upstream v1.4.2 plus new defaults)
+# Simple default view for new members (same file as upstream v1.4.3 plus new defaults)
 COPY apps/api/plane/db/models/issue.py /app/backend/plane/db/models/issue.py

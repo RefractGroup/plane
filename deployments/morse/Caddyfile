@@ -1,4 +1,4 @@
-# Morse Micro board proxy, adapted from apps/proxy/Caddyfile.aio.ce (v1.4.2).
+# Morse Micro board proxy, adapted from apps/proxy/Caddyfile.aio.ce (unchanged from v1.4.2 to v1.4.3).
 # Changes from upstream:
 # - /morsemicro is a short link. It redirects to MORSE_SHORT_LINK_TARGET (a path on this
 #   site, set in the service variables), or to the workspace home if that isn't set.
