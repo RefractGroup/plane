@@ -6,9 +6,9 @@
 
 import type { ReactNode } from "react";
 import Script from "next/script";
-import { Links, Meta, Outlet, Scripts } from "react-router";
+import { Links, Meta, Outlet, Scripts, useLocation, Navigate } from "react-router";
 import type { LinksFunction } from "react-router";
-import { ThemeProvider, useTheme } from "next-themes";
+import { ThemeProvider } from "next-themes";
 // plane imports
 import { SITE_DESCRIPTION, SITE_NAME } from "@plane/constants";
 import { cn } from "@plane/utils";
@@ -25,9 +25,12 @@ import { isStaleAssetError, recoverFromStaleAsset } from "@/lib/stale-asset-erro
 import { CustomErrorComponent } from "./error";
 import { AppProvider } from "./provider";
 // fonts
+// eslint-disable-next-line import/no-unassigned-import -- Font packages register global styles.
 import "@fontsource-variable/inter";
 import interVariableWoff2 from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
+// eslint-disable-next-line import/no-unassigned-import -- Font packages register global styles.
 import "@fontsource/material-symbols-rounded";
+// eslint-disable-next-line import/no-unassigned-import -- Font packages register global styles.
 import "@fontsource/ibm-plex-mono";
 
 const APP_TITLE = "Refract";
@@ -112,6 +115,14 @@ export const meta: Route.MetaFunction = () => [
 ];
 
 export default function Root() {
+  const { pathname, search } = useLocation();
+  const authQuery = new URLSearchParams(search);
+  if (pathname === "/" && ["client/", "/client/"].includes(authQuery.get("next_path") || "")) {
+    const error = authQuery.get("error_code");
+    return <Navigate to={`/client/${error ? `?error_code=${encodeURIComponent(error)}` : ""}`} replace />;
+  }
+  // The client shell shares the theme and design system, without staff stores or workspace fetches.
+  if (pathname === "/client" || pathname.startsWith("/client/")) return <Outlet />;
   return (
     <AppProvider>
       <div className={cn("relative flex h-screen w-full flex-col overflow-hidden bg-canvas", "desktop-app-container")}>
@@ -124,11 +135,8 @@ export default function Root() {
 }
 
 export function HydrateFallback() {
-  const { resolvedTheme } = useTheme();
-
-  // if we are on the server or the theme is not resolved, return an empty div
-  if (typeof window === "undefined" || resolvedTheme === undefined) return <div />;
-
+  // Keep the static fallback identical on the server and the first client render.
+  // Theme colours are resolved by CSS, without changing the markup during hydration.
   return (
     <div className="relative flex h-screen w-full items-center justify-center bg-canvas">
       <LogoSpinner />

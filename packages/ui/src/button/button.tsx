@@ -39,8 +39,16 @@ const Button = React.forwardRef(function Button(props: ButtonProps, ref: React.F
   const buttonIconStyle = getIconStyling(size);
 
   return (
-    <button ref={ref} type={type} className={cn(buttonStyle, className)} disabled={disabled || loading} {...rest}>
+    <button
+      ref={ref}
+      type={type}
+      className={cn(buttonStyle, className)}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
+      {...rest}
+    >
       {prependIcon && <div className={buttonIconStyle}>{React.cloneElement(prependIcon, { strokeWidth: 2 })}</div>}
+      {loading && <span className="rf-spinner" aria-hidden="true" />}
       {children}
       {appendIcon && <div className={buttonIconStyle}>{React.cloneElement(appendIcon, { strokeWidth: 2 })}</div>}
     </button>

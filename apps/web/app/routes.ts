@@ -17,6 +17,10 @@ import { mergeRoutes } from "./routes/helper";
 const mergedRoutes: RouteConfigEntry[] = mergeRoutes(coreRoutes, extendedRoutes);
 
 // Add catch-all route at the end (404 handler)
-const routes: RouteConfigEntry[] = [...mergedRoutes, route("*", "./not-found.tsx")];
+const routes: RouteConfigEntry[] = [
+  route("client/*", "./client/page.tsx"),
+  ...mergedRoutes,
+  route("*", "./not-found.tsx"),
+];
 
 export default routes;

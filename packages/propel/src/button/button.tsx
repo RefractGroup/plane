@@ -31,9 +31,11 @@ const Button = React.forwardRef(function Button(props: ButtonProps, ref: React.F
       type={type}
       className={cn(buttonVariants({ variant, size }), className)}
       disabled={disabled || loading}
+      aria-busy={loading || undefined}
       {...rest}
     >
       {prependIcon && React.cloneElement(prependIcon, { className: cn("shrink-0", buttonIconStyle), strokeWidth: 2 })}
+      {loading && <span className="rf-spinner" aria-hidden="true" />}
       {children}
       {appendIcon && React.cloneElement(appendIcon, { className: cn("shrink-0", buttonIconStyle), strokeWidth: 2 })}
     </button>

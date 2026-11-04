@@ -1,0 +1,388 @@
+/* Shared client + internal components. Public prop APIs stay compatible with Plane. */
+@layer components {
+  .rf-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    gap: 6px;
+    min-width: 0;
+    flex-shrink: 0;
+    height: var(--rf-control-lg);
+    padding: 0 12px;
+    border: 1px solid transparent;
+    border-radius: var(--rf-radius-lg);
+    font-family: var(--rf-font-sans);
+    font-size: var(--rf-font-13);
+    font-weight: 500;
+    line-height: 20px;
+    white-space: nowrap;
+    color: var(--rf-button-fg, var(--rf-primary-foreground));
+    background: var(--rf-button-bg, var(--rf-component-on-container-strong));
+    transition:
+      color var(--rf-duration-fast),
+      background-color var(--rf-duration-fast),
+      box-shadow var(--rf-duration-fast),
+      transform var(--rf-duration-normal);
+    touch-action: manipulation;
+    user-select: none;
+  }
+  .rf-button:hover:not(:disabled) {
+    background: var(--rf-button-hover, var(--rf-component-hover));
+  }
+  .rf-button:active:not(:disabled) {
+    background: var(--rf-button-active, var(--rf-button-hover));
+  }
+  .rf-button:focus-visible,
+  .rf-field:focus-visible,
+  .rf-icon-button:focus-visible {
+    outline: 2px solid var(--rf-brand-border-focus);
+    outline-offset: 2px;
+  }
+  .rf-button:disabled {
+    cursor: not-allowed;
+    border-color: transparent;
+    background: var(--rf-disabled);
+    color: var(--rf-disabled-foreground);
+    box-shadow: none;
+  }
+  .rf-button--primary {
+    --rf-button-bg: var(--rf-action);
+    --rf-button-hover: var(--rf-action-hover);
+    --rf-button-active: var(--rf-action-hover);
+    --rf-button-fg: var(--rf-action-foreground);
+    border-color: var(--rf-action);
+    box-shadow: var(--rf-shadow-action);
+  }
+  .rf-button--secondary {
+    --rf-button-bg: var(--rf-component-on-container-strong);
+    --rf-button-hover: var(--rf-component-on-container-strong-hover);
+    border-color: var(--rf-border-strong);
+    box-shadow: var(--rf-shadow-control);
+  }
+  .rf-button--tertiary {
+    --rf-button-bg: var(--rf-component);
+    --rf-button-hover: var(--rf-component-hover);
+    --rf-button-active: var(--rf-component-active);
+    --rf-button-fg: var(--rf-secondary-foreground);
+  }
+  .rf-button--brand {
+    --rf-button-bg: var(--rf-brand-solid);
+    --rf-button-hover: var(--rf-brand-solid-hover);
+    --rf-button-active: var(--rf-brand-solid-active);
+    --rf-button-fg: var(--rf-on-brand-solid-foreground);
+    box-shadow: var(--rf-shadow-action);
+  }
+  .rf-button--danger {
+    --rf-button-bg: var(--rf-danger-solid);
+    --rf-button-hover: var(--rf-danger-solid-hover);
+    --rf-button-active: var(--rf-danger-solid-active);
+    --rf-button-fg: var(--rf-on-danger-solid-foreground);
+  }
+  .rf-button--danger-subtle {
+    --rf-button-bg: var(--rf-danger-subtle);
+    --rf-button-hover: var(--rf-danger-subtle-hover);
+    --rf-button-active: var(--rf-danger-subtle-active);
+    --rf-button-fg: var(--rf-danger-foreground);
+  }
+  .rf-button--warning {
+    --rf-button-bg: var(--rf-warning-solid);
+    --rf-button-hover: var(--rf-warning-solid-hover);
+    --rf-button-fg: var(--rf-on-warning-solid-foreground);
+  }
+  .rf-button--transparent,
+  .rf-button--link {
+    --rf-button-bg: transparent;
+    --rf-button-hover: var(--rf-transparent-hover);
+    --rf-button-active: var(--rf-transparent-active);
+    --rf-button-fg: var(--rf-secondary-foreground);
+  }
+  .rf-button--link {
+    height: auto;
+    padding: 0;
+    color: var(--rf-brand-foreground);
+  }
+  .rf-button--xs {
+    height: var(--rf-control-xs);
+    padding-inline: 6px;
+    border-radius: var(--rf-radius-sm);
+    font-size: var(--rf-font-12);
+  }
+  .rf-button--sm {
+    height: var(--rf-control-sm);
+    padding-inline: 8px;
+    border-radius: var(--rf-radius-md);
+  }
+  .rf-button--md {
+    height: var(--rf-control-md);
+    padding-inline: 10px;
+    border-radius: var(--rf-radius-md);
+  }
+  .rf-button--lg {
+    height: var(--rf-control-lg);
+  }
+  .rf-button--xl {
+    height: var(--rf-control-xl);
+    padding-inline: 14px;
+  }
+  .rf-button--touch {
+    min-height: var(--rf-control-touch);
+    padding-inline: 16px;
+  }
+  .rf-field {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid var(--rf-border-strong);
+    border-radius: var(--rf-radius-lg);
+    background: var(--rf-component-on-container-strong);
+    color: var(--rf-primary-foreground);
+    box-shadow: var(--rf-shadow-input);
+    font-family: var(--rf-font-sans);
+    font-size: var(--rf-font-13);
+    line-height: 20px;
+    transition:
+      border-color var(--rf-duration-fast),
+      box-shadow var(--rf-duration-fast);
+  }
+  .rf-field::placeholder {
+    color: var(--rf-tertiary-foreground);
+  }
+  .rf-field[aria-invalid="true"] {
+    border-color: var(--rf-danger-border-default);
+  }
+  .rf-field:disabled {
+    background: var(--rf-disabled);
+    color: var(--rf-disabled-foreground);
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+  .rf-surface {
+    background: var(--rf-container);
+    border: 1px solid var(--rf-border-default);
+    border-radius: var(--rf-radius-2xl);
+    box-shadow: var(--rf-shadow-default);
+  }
+  .rf-overlay {
+    background: var(--rf-modal);
+    border-radius: var(--rf-radius-3xl);
+    box-shadow: var(--rf-shadow-extra-large);
+  }
+  .rf-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--rf-radius-md);
+    color: var(--rf-secondary-foreground);
+    transition: background-color var(--rf-duration-fast);
+  }
+  .rf-icon-button:hover:not(:disabled) {
+    background: var(--rf-transparent-hover);
+    color: var(--rf-primary-foreground);
+  }
+  .rf-label {
+    font-size: var(--rf-font-13);
+    font-weight: 500;
+    line-height: 20px;
+    color: var(--rf-primary-foreground);
+  }
+  .rf-caption {
+    font-size: var(--rf-font-12);
+    line-height: 16px;
+    color: var(--rf-secondary-foreground);
+  }
+  .rf-code {
+    font-family: var(--rf-font-mono);
+    font-size: var(--rf-font-13);
+    line-height: 20px;
+  }
+  .rf-spinner {
+    width: 14px;
+    height: 14px;
+    flex: none;
+    border: 1.5px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: rf-spin 700ms linear infinite;
+  }
+}
+@keyframes rf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rf-button,
+  .rf-field,
+  .rf-icon-button {
+    transition: none;
+  }
+  .rf-spinner {
+    animation: none;
+  }
+}
+@media (pointer: coarse) {
+  .rf-button::before {
+    content: "";
+    position: absolute;
+    inset: min(0px, calc((100% - 44px) / 2)) 0;
+  }
+}
+
+/* Authentication: Cyna's form hierarchy, Refract's own optical artwork. */
+@layer components {
+  .rf-auth-art {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    min-height: 600px;
+    padding: 44px;
+    border-radius: 7px;
+    background:
+      linear-gradient(180deg, rgb(16 29 40 / 18%) 25%, rgb(16 29 40 / 88%) 100%),
+      #dce0d7 url("/refract/optical-glass.webp") center / cover;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgb(20 33 58 / 6%);
+  }
+  .rf-auth-art-mark {
+    position: absolute;
+    left: 40px;
+    top: 36px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #fff;
+    font-size: 23px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
+  .rf-auth-art-mark svg {
+    filter: brightness(0) invert(1);
+  }
+  .rf-auth-note {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    color: #fff;
+  }
+  .rf-auth-eyebrow {
+    color: #d8e0e5;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+  }
+  .rf-auth-note h2 {
+    font-family: var(--rf-font-sans);
+    font-size: clamp(30px, 3.4vw, 42px);
+    font-weight: 550;
+    letter-spacing: -0.03em;
+    line-height: 1.12;
+    margin: 16px 0;
+  }
+  .rf-auth-note p {
+    max-width: 300px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #dbe2e6;
+  }
+  .rf-auth-note-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid rgb(255 255 255 / 20%);
+    margin-top: 32px;
+    padding-top: 18px;
+    font-size: 10px;
+    color: #d2dce2;
+  }
+  .rf-auth-note-footer > span:last-child {
+    font-size: 18px;
+  }
+  .rf-auth-frame {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(440px, 1fr);
+    gap: 16px;
+    min-height: 100dvh;
+    padding: 16px;
+    background: var(--rf-shell);
+    overflow: auto;
+  }
+  .rf-auth-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    gap: 20px;
+    padding: 32px;
+  }
+  .rf-auth-brand {
+    width: 100%;
+    max-width: 400px;
+  }
+  .rf-auth-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 32px;
+    border: 1px solid var(--rf-border-default);
+    border-radius: 7px;
+    background: var(--rf-card);
+    box-shadow: var(--rf-shadow-raised);
+  }
+  .rf-auth-form-container {
+    margin-top: 40px;
+    padding-block: 24px;
+  }
+  .rf-auth-card > .rf-auth-form-container {
+    margin-top: 0;
+    padding-block: 0;
+  }
+  .rf-auth-card .rf-field {
+    min-height: 38px;
+    border-radius: 4px;
+  }
+  .rf-auth-card form > .rf-button:not(.rf-button--link) {
+    min-height: 38px;
+    border-radius: 4px;
+  }
+  .rf-auth-caption {
+    font-size: 11px;
+    line-height: 1.6;
+    color: var(--rf-tertiary-foreground);
+  }
+  .rf-auth-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin-bottom: 5px;
+  }
+  .rf-auth-heading h1 {
+    font-family: var(--rf-font-sans);
+    font-size: 28px;
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--rf-primary-foreground);
+  }
+  .rf-auth-heading p {
+    color: var(--rf-secondary-foreground);
+    font-size: 13px;
+    line-height: 1.6;
+    font-weight: 400;
+  }
+}
+@media (max-width: 900px) {
+  .rf-auth-art {
+    display: none;
+  }
+  .rf-auth-frame {
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+  .rf-auth-main {
+    width: 100%;
+    max-width: 520px;
+    min-height: 100dvh;
+    margin-inline: auto;
+    padding: 28px;
+  }
+}

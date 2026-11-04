@@ -111,6 +111,7 @@ INSTALLED_APPS = [
     "plane.license",
     "plane.api",
     "plane.authentication",
+    "plane.client_portal",
     # Third-party things
     "rest_framework",
     "corsheaders",
@@ -126,6 +127,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "plane.client_portal.middleware.ClientBoundaryMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "crum.CurrentRequestUserMiddleware",
     "django.middleware.gzip.GZipMiddleware",

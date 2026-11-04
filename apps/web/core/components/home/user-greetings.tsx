@@ -12,7 +12,7 @@ import type { IUser } from "@plane/types";
 import { useCurrentTime } from "@/hooks/use-current-time";
 
 export interface IUserGreetingsView {
-  user: IUser;
+  user: Pick<IUser, "first_name" | "last_name"> & Partial<Pick<IUser, "user_timezone">>;
 }
 
 export function UserGreetingsView(props: IUserGreetingsView) {

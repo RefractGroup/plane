@@ -1,0 +1,39 @@
+name: Client portal checks
+on:
+  pull_request:
+    branches: [morse, main]
+  push:
+    branches: [refract-branding, main]
+permissions:
+  contents: read
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run build --filter=web
+      - run: pnpm --filter web check:types
+      - run: node --experimental-strip-types --test apps/web/tests/client-*.test.mjs
+      - run: pnpm exec oxlint --deny-warnings apps/web/app/client
+  boundaries:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: cp apps/api/.env.example apps/api/.env
+      - run: >-
+          docker compose -p client-portal-ci -f docker-compose-test.yml run --rm --build api-tests
+          sh -c 'python manage.py check && python manage.py makemigrations --check --dry-run &&
+          pytest plane/tests/contract/api/test_client_portal.py
+          plane/tests/contract/api/test_portal_pages.py
+          plane/tests/contract/api/test_portal_attachments.py
+          plane/tests/contract/api/test_generic_asset.py'
+      - if: always()
+        run: docker compose -p client-portal-ci -f docker-compose-test.yml down -v

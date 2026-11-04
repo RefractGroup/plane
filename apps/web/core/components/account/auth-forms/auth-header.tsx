@@ -74,11 +74,11 @@ export const AuthHeader = observer(function AuthHeader(props: TAuthHeader) {
   const getHeaderSubHeader = (
     step: EAuthSteps,
     mode: EAuthModes,
-    invitation: IWorkspaceMemberInvitation | undefined,
+    workspaceInvitation: IWorkspaceMemberInvitation | undefined,
     email: string | undefined
   ) => {
-    if (invitation && email && invitation.email === email && invitation.workspace) {
-      const workspace = invitation.workspace;
+    if (workspaceInvitation && email && workspaceInvitation.email === email && workspaceInvitation.workspace) {
+      const workspace = workspaceInvitation.workspace;
       return {
         header: (
           <div className="relative inline-flex items-center gap-2">
@@ -116,9 +116,9 @@ type TAuthHeaderBase = {
 
 export function AuthHeaderBase(props: TAuthHeaderBase) {
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-h4-semibold text-primary">{props.header}</span>
-      <span className="text-h4-semibold text-placeholder">{props.subHeader}</span>
+    <div className="rf-auth-heading">
+      <h1>{props.header}</h1>
+      <p>{props.subHeader}</p>
     </div>
   );
 }

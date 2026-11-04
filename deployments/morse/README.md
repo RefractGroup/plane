@@ -2,7 +2,7 @@
 
 A Refract-branded build of [Plane](https://github.com/makeplane/plane) Community Edition. It serves the internal Refract workspace and the existing Morse Micro review workspace. The deployment folder and branch retain their original names.
 
-This branch (`morse`) is upstream `v1.4.3` plus a small set of changes, mostly frontend:
+The production branch (`morse`) is upstream `v1.4.3` plus a small set of changes, mostly frontend:
 
 - Brand colors use the eight Morse Micro brand colors (`packages/tailwind-config/variables.css`).
 - The wordmark, icon, favicon and loading spinner show Refract's existing logo. The sign-in screen uses Refract copy without Plane's customer-logo promotion.
@@ -53,3 +53,9 @@ The authenticated v1 API includes read-only project pages at `projects/{project_
 Attachment APIs verify project membership and bind every asset to the work item in the URL. Generic asset routes also check the asset's project and private-page access. No schema migration is required.
 
 Run the contract tests in `plane/tests/contract/api/test_portal_pages.py`, `test_portal_attachments.py` and `test_generic_asset.py` using the isolated Docker test stack before changing these routes. After deployment, repeat the synthetic integration checks from the private portal repository.
+
+## Client interface
+
+The native client interface is documented in [CLIENT-PORTAL.md](CLIENT-PORTAL.md). It reuses this fork's web app, design system, Django authentication and content models. Local preview and rollout status are separate from the live board.
+
+The complete client interface and shared Refract design-system work are collected on `main`. Production continues to deploy `morse`; pushing `main` does not deploy the portal or migrate existing client accounts. The shared tokens, buttons, inputs and authentication surfaces apply to the staff platform as well as the client portal. Client navigation and Phosphor icons are scoped to the client interface. See `docs/design-system/PRODUCT-UX.md` for the implemented flows and remaining work.

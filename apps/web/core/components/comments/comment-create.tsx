@@ -24,6 +24,7 @@ type TCommentCreate = {
   workspaceSlug: string;
   activityOperations: TCommentsOperations;
   showToolbarInitially?: boolean;
+  showAccessSpecifier?: boolean;
   projectId?: string;
   onSubmitCallback?: (elementId: string) => void;
 };
@@ -37,6 +38,7 @@ export const CommentCreate = observer(function CommentCreate(props: TCommentCrea
     entityId,
     activityOperations,
     showToolbarInitially = false,
+    showAccessSpecifier = false,
     projectId,
     onSubmitCallback,
   } = props;
@@ -93,6 +95,8 @@ export const CommentCreate = observer(function CommentCreate(props: TCommentCrea
   return (
     <div
       className={cn("sticky bottom-0 z-[4] bg-surface-1 sm:static")}
+      role="group"
+      aria-label="Write a comment"
       onKeyDown={(e) => {
         if (
           e.key === "Enter" &&
@@ -130,6 +134,7 @@ export const CommentCreate = observer(function CommentCreate(props: TCommentCrea
                 initialValue={value ?? "<p></p>"}
                 containerClassName="min-h-min"
                 onChange={(comment_json, comment_html) => onChange(comment_html)}
+                showAccessSpecifier={showAccessSpecifier}
                 accessSpecifier={accessValue ?? EIssueCommentAccessSpecifier.INTERNAL}
                 handleAccessChange={onAccessChange}
                 isSubmitting={isSubmitting}
