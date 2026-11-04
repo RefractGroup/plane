@@ -28,13 +28,6 @@ export interface IButtonStyling {
   };
 }
 
-enum buttonSizeStyling {
-  sm = `px-3 py-1.5 font-medium text-11 rounded-sm flex items-center gap-1.5 whitespace-nowrap transition-all justify-center`,
-  md = `px-4 py-1.5 font-medium text-13 rounded-sm flex items-center gap-1.5 whitespace-nowrap transition-all justify-center`,
-  lg = `px-5 py-2 font-medium text-13 rounded-sm flex items-center gap-1.5 whitespace-nowrap transition-all justify-center`,
-  xl = `px-5 py-3.5 font-medium text-13 rounded-sm flex items-center gap-1.5 whitespace-nowrap transition-all justify-center`,
-}
-
 enum buttonIconStyling {
   sm = "h-3 w-3 flex justify-center items-center overflow-hidden my-0.5 flex-shrink-0",
   md = "h-3.5 w-3.5 flex justify-center items-center overflow-hidden my-0.5 flex-shrink-0",
@@ -112,16 +105,21 @@ export const buttonStyling: IButtonStyling = {
 };
 
 export const getButtonStyling = (variant: TButtonVariant, size: TButtonSizes, disabled: boolean = false): string => {
-  let tempVariant: string = ``;
-  const currentVariant = buttonStyling[variant];
-
-  tempVariant = `${currentVariant.default} ${disabled ? currentVariant.disabled : currentVariant.hover} ${
-    currentVariant.pressed
-  }`;
-
-  let tempSize: string = ``;
-  if (size) tempSize = buttonSizeStyling[size];
-  return `${tempVariant} ${tempSize}`;
+  const variants: Record<TButtonVariant, string> = {
+    primary: "primary",
+    "accent-primary": "tertiary",
+    "outline-primary": "secondary",
+    "neutral-primary": "secondary",
+    "link-primary": "link",
+    danger: "danger",
+    "accent-danger": "danger-subtle",
+    "outline-danger": "danger-subtle",
+    "link-danger": "danger-subtle",
+    "tertiary-danger": "danger-subtle",
+    "link-neutral": "transparent",
+  };
+  const sizes: Record<TButtonSizes, string> = { sm: "sm", md: "md", lg: "lg", xl: "xl" };
+  return `rf-button rf-button--${variants[variant]} rf-button--${sizes[size]}${disabled ? " cursor-not-allowed" : ""}`;
 };
 
 export const getIconStyling = (size: TButtonSizes): string => {

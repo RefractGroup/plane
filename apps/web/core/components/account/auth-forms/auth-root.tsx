@@ -137,10 +137,10 @@ export const AuthRoot = observer(function AuthRoot(props: TAuthRoot) {
           authStep={authStep}
           authMode={authMode}
           email={email}
-          setEmail={(email) => setEmail(email)}
-          setAuthMode={(authMode) => setAuthMode(authMode)}
-          setAuthStep={(authStep) => setAuthStep(authStep)}
-          setErrorInfo={(errorInfo) => setErrorInfo(errorInfo)}
+          setEmail={setEmail}
+          setAuthMode={setAuthMode}
+          setAuthStep={setAuthStep}
+          setErrorInfo={setErrorInfo}
           currentAuthMode={currentAuthMode}
         />
       )}
@@ -151,7 +151,7 @@ export const AuthRoot = observer(function AuthRoot(props: TAuthRoot) {
 
 function AuthContainer({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-10 flex w-full flex-grow flex-col items-center justify-center py-6">
+    <div className="rf-auth-form-container flex w-full flex-grow flex-col items-center justify-center">
       <div className="relative flex w-full max-w-[22.5rem] flex-col gap-6">{children}</div>
     </div>
   );

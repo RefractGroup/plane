@@ -31,9 +31,10 @@ const authContentMap = {
 
 type AuthHeaderProps = {
   type: EAuthModes;
+  pageTitle?: string;
 };
 
-export const AuthHeader = observer(function AuthHeader({ type }: AuthHeaderProps) {
+export const AuthHeader = observer(function AuthHeader({ type, pageTitle }: AuthHeaderProps) {
   const { t } = useTranslation();
   // store
   const { config } = useInstance();
@@ -42,7 +43,7 @@ export const AuthHeader = observer(function AuthHeader({ type }: AuthHeaderProps
 
   return (
     <AuthHeaderBase
-      pageTitle={t(authContentMap[type].pageTitle)}
+      pageTitle={pageTitle || t(authContentMap[type].pageTitle)}
       additionalAction={
         enableSignUpConfig && (
           <div className="flex flex-col items-end text-center text-13 font-medium text-tertiary sm:flex-row sm:items-center sm:gap-2">

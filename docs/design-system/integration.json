@@ -1,0 +1,233 @@
+{
+  "version": 2,
+  "updated": "2026-11-03",
+  "status": "Local desktop implementation in the Plane fork; browser review captures in Figma; not deployed",
+  "figma": {
+    "fileKey": "pk8kpSLt5ew2UP93cQjcgs",
+    "url": "https://www.figma.com/design/pk8kpSLt5ew2UP93cQjcgs",
+    "cover": "23:29",
+    "pages": {
+      "00 \u00b7 Start here": "8:471",
+      "01 \u00b7 Foundations": "8:472",
+      "02 \u00b7 Actions & inputs": "8:473",
+      "03 \u00b7 Navigation & overlays": "8:474",
+      "04 \u00b7 Data & feedback": "8:475",
+      "05 \u00b7 Client onboarding": "0:1",
+      "06 \u00b7 Client workspace": "1:2",
+      "07 \u00b7 Internal workspace": "8:476",
+      "08 \u00b7 Mobile": "1:3",
+      "09 \u00b7 Component masters": "1:4",
+      "10 \u00b7 Desktop implementation": "53:2"
+    },
+    "components": {
+      "Button": "9:528",
+      "Button size": "9:539",
+      "Button feedback": "9:544",
+      "Input": "9:562",
+      "Textarea": "9:580",
+      "Select": "9:606",
+      "Combobox": "9:632",
+      "Badge": "9:647",
+      "Checkbox": "9:665",
+      "Radio group": "9:676",
+      "Switch": "9:689",
+      "Avatar": "9:706",
+      "Card": "9:716",
+      "Accordion": "9:728",
+      "Collapsible": "9:740",
+      "Menu": "9:785",
+      "Context menu": "9:830",
+      "Command": "9:887",
+      "Popover": "9:932",
+      "Dialog": "9:957",
+      "Drawer": "9:982",
+      "Input OTP": "9:1009",
+      "Tabs": "9:1025",
+      "Breadcrumb": "9:1042",
+      "Kbd": "9:1047",
+      "Label": "9:1052",
+      "Divider": "9:1055",
+      "Reaction": "9:1060",
+      "Scroll area": "9:1159",
+      "Table": "9:1194",
+      "Skeleton": "9:1203",
+      "Spinner": "9:1210",
+      "Toast": "9:1254",
+      "Tooltip": "9:1259",
+      "Code card": "9:1265"
+    },
+    "desktopCaptures": {
+      "Home": "53:6",
+      "Work list": "53:8",
+      "Work board": "53:10",
+      "Work detail": "53:12",
+      "Library": "53:14",
+      "Reader": "53:16",
+      "Sign in": "53:18",
+      "New request": "53:20",
+      "Account": "53:22",
+      "Reporting preview": "53:24",
+      "Recovery": "57:3",
+      "Account dark": "57:5"
+    },
+    "reviewNote": "Page 10 contains raster captures of the working local implementation. Pages 05\u201309 retain earlier editable explorations and component masters; they do not override the current code. The 2 November captures predate the 3 November icon and Work items refinement."
+  },
+  "sources": [
+    {
+      "url": "https://design.interfere.com/",
+      "use": "Mirrored raw primitives and component vocabulary; preserved beneath the Refract semantic layer."
+    },
+    {
+      "url": "https://github.com/RefractGroup/cyna-proposals-ai",
+      "revision": "b8093dbc",
+      "files": [
+        "src/styles.css",
+        "src/components/widget.tsx",
+        "src/components/ui/button.tsx",
+        "src/components/ui/table.tsx",
+        "src/components/ui/filter-bar.tsx",
+        "src/components/auth/auth-scene.tsx",
+        "src/routes/_authenticated.tsx",
+        "src/routes/_authenticated/dashboard.tsx"
+      ],
+      "use": "Actual product source: compact Inter type, crisp geometry, neutral canvas, bordered widgets, ink primary actions and restrained elevation."
+    },
+    {
+      "url": "https://github.com/RefractGroup/cyna-v2",
+      "revision": "5552be44aca71424ec936aedeffd4e5ca21e8024",
+      "files": ["packages/tokens/src/tokens.css", "packages/tokens/src/theme.css", "docs/audit/06-design-system.md"],
+      "use": "Extracted design tokens and semantic roles. This is the v2 rebuild, not the deployed v1 product."
+    },
+    {
+      "url": "https://www.figma.com/design/UUHCVGCNdYGgXjVMNXPyuU",
+      "nodes": ["173:2637"],
+      "use": "Saunday product surface edges, restrained contact shadows and colour treatment; also checked against its Swift DesignSystem."
+    },
+    {
+      "url": "https://www.figma.com/design/uLkSNHZvob1RCunTfYQt7r/Prism-Product-V1",
+      "nodes": ["923:590", "2532:20083", "2532:27299"],
+      "use": "Earlier visual exploration and account-entry artwork composition; superseded by Cyna code for current product typography and geometry."
+    }
+  ],
+  "implementation": {
+    "theme": "packages/tailwind-config/refract-product.css",
+    "primitives": "packages/tailwind-config/refract-components.css",
+    "tokens": "docs/design-system/tokens.json",
+    "components": [
+      "packages/propel/src/button",
+      "packages/propel/src/input",
+      "packages/ui/src/button",
+      "packages/ui/src/form-fields/input.tsx",
+      "packages/propel/src/menu"
+    ],
+    "screens": [
+      "apps/web/app/client/page.tsx",
+      "apps/web/app/client/home.tsx",
+      "apps/web/app/client/work-list.tsx",
+      "apps/web/app/client/documents.tsx",
+      "apps/web/app/client/account.tsx",
+      "apps/web/core/components/auth-screens/refract-auth-frame.tsx",
+      "apps/web/app/(all)/accounts/forgot-password/page.tsx",
+      "apps/web/app/(all)/accounts/reset-password/page.tsx",
+      "apps/web/app/(all)/accounts/set-password/page.tsx"
+    ],
+    "legacySemanticAliases": 70,
+    "notes": [
+      "Shared tokens, buttons, fields and authentication framing apply to both internal Plane and the client portal.",
+      "Home, list, board, detail, library, reader, requests and account are implemented using existing scoped APIs. Core client filters and navigation are functional.",
+      "The visual pass retains native authentication, password login and registration policy. Earlier work in this branch adds authorised-queryset filtering before pagination.",
+      "Invitation/setup designs are proposals pending end-to-end validation; richer activity, approvals and notification workflows are separate product work.",
+      "Performance is disconnected by default. The optional reporting preview is explicitly labelled sample data.",
+      "Local screenshots use synthetic fixtures, not client production data.",
+      "Figma is a review output. Its library is not published and has no Code Connect mapping.",
+      "Client iconography uses the opt-in @plane/propel/refract-icons entry point; the internal Plane registry is unchanged. Work items uses 13px priority/date text and separate State and Priority dropdowns."
+    ],
+    "primitiveTheme": "packages/tailwind-config/refract.css",
+    "behaviour": [
+      "apps/web/app/client/work-view.ts",
+      "apps/web/app/client/document-view.ts",
+      "apps/api/plane/client_portal/work_view.py"
+    ]
+  },
+  "principles": [
+    "Use Inter throughout: 13px operational UI, 11\u201312px metadata and restrained 24\u201328px page headings.",
+    "Use crisp 4\u20137px control and panel corners, a neutral canvas and white content surfaces.",
+    "Keep primary actions ink; use Refract blue for focus, selected tabs and limited emphasis. Status colour communicates meaning.",
+    "Keep work rows and group headers unfilled, with aligned metadata and fine dividers.",
+    "Use contact shadows for control edges and elevation for overlays; avoid lifting every panel.",
+    "Keep Plane high-contrast palettes authoritative for shared controls.",
+    "Use labelled keyboard controls, visible focus, loading/disabled feedback, reduced motion and recovery from empty states."
+  ],
+  "assets": {
+    "artwork": "apps/web/public/refract/optical-glass.webp",
+    "tool": "Built-in image_gen",
+    "prompt": "Photographic abstraction of daylight refracting through broad curved sheets of clear fluted glass. Portrait; pearl and warm ivory, smoky pale blue, muted sage and apricot, silver highlights, broad diagonal motion. Macro optical photography, natural grain, soft focus depth, a few crisp glass edges. No logos, lettering, interface or watermark; quiet centre for native Refract mark.",
+    "displayFont": null,
+    "fontSource": "https://github.com/google/fonts/tree/main/ofl/hedviglettersserif",
+    "license": "apps/web/public/refract/Hedvig-OFL.txt",
+    "retainedReferenceFont": "Hedvig Letters Serif is bundled from the earlier exploration but is not used by the current client UI."
+  },
+  "validation": {
+    "updated": "2026-11-02",
+    "environment": "Isolated localhost build and synthetic client/staff accounts; no production mutation or deployment.",
+    "lint": "9 client files: 0 warnings/errors. Wider auth/client pass: 0 errors, 6 existing native auth warnings.",
+    "build": "Web production build passed.",
+    "unit": "7 Node tests passed covering URL/filter restoration, safe option parsing, due dates, state grouping, document search/sort and non-mutation.",
+    "api": "39 scoped portal API tests passed earlier in this implementation; API unchanged in the Cyna visual pass.",
+    "browser": [
+      "Client password sign-in and password visibility",
+      "Home, work list/board and contextual detail navigation",
+      "Filter restoration, empty-search recovery and dirty-comment guard",
+      "Library search/sort, reader contents and copy link",
+      "Request form and cancellation without submitting a new request in the final visual pass",
+      "Account light/dark selection",
+      "Recovery form enablement; no email sent",
+      "Native staff password sign-in, workspace, work list and detail controls",
+      "Menu icon/label alignment, keyboard highlight, Enter selection and Escape focus return",
+      "Display menu remains open for multiple selections; ordinary filter selection closes it",
+      "Search removal clears both work and global search inputs",
+      "Shared button/input light, dark and high-contrast palettes in a temporary built-CSS harness"
+    ],
+    "limits": [
+      "Google OAuth provider not retested in the isolated fixture",
+      "Invitation/setup lifecycle not validated end to end",
+      "No analytics integration",
+      "No full mobile or real-client usability acceptance in this desktop pass"
+    ],
+    "types": "Web and propel type checks passed after the final shared-menu changes; ui passed earlier in the implementation.",
+    "desktopViewport": "1200\u00d7897 verified. Requested 1024\u00d7768 override was ignored by the browser provider; alternate widths are not claimed as tested.",
+    "browserToolNote": "A recoverable hydration warning on document loads was traced to the browser QA overlay, div#codex-agent-overlay-root, inserted directly under html. Temporary diagnostics were removed; no product workaround added.",
+    "workItemsRefinement": {
+      "date": "2026-11-03",
+      "build": "Web and Propel production builds passed; web and Propel type checks passed.",
+      "lint": "14 changed source/test files: 0 warnings and errors; formatting and diff whitespace checks passed.",
+      "unit": "10 Node tests passed, including same-workspace result retention and workspace/preview/request boundary isolation.",
+      "browser": [
+        "13px priority and date text verified from computed styles",
+        "Separate State and Priority dropdowns, combined constraints and independent removal",
+        "Arrow-key menu navigation, Enter selection and Escape focus return",
+        "Debounced search and global-search synchronisation",
+        "Sorting and multiple Display switch changes",
+        "Immediate toggle feedback after URL changes",
+        "List/board and contextual detail navigation",
+        "Home, library and account icon consistency",
+        "Light and dark filter surfaces"
+      ],
+      "limits": "Desktop localhost fixture only; internal Plane icons and older Figma captures are unchanged.",
+      "separateFilters": "Restored separate State/Priority controls; web build, type check and scoped lint passed. Browser checks confirmed independent selection/removal, combined constraints and keyboard navigation."
+    }
+  },
+  "iconography": {
+    "source": "https://github.com/phosphor-icons/react",
+    "version": "2.1.10",
+    "entry": "@plane/propel/refract-icons",
+    "storybook": "Refract/Iconography",
+    "scope": "Client portal; internal Plane migration is not part of this pass",
+    "sizes": {
+      "control": 16,
+      "navigation": 18,
+      "priorityText": 13,
+      "dueDateText": 13
+    }
+  }
+}

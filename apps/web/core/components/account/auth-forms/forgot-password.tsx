@@ -68,6 +68,7 @@ export const ForgotPasswordForm = observer(function ForgotPasswordForm() {
           message: t("auth.forgot_password.toast.success.message"),
         });
         setResendCodeTimer(30);
+        return undefined;
       })
       .catch((err) => {
         setToast({
@@ -128,7 +129,10 @@ export const ForgotPasswordForm = observer(function ForgotPasswordForm() {
             ? t("auth.common.resend_in", { seconds: resendTimerCode })
             : t("auth.forgot_password.send_reset_link")}
         </Button>
-        <Link href="/" className={cn("w-full", getButtonStyling("link", "lg"))}>
+        <Link
+          href={searchParams.get("next_path") === "/client/" ? "/client/" : "/"}
+          className={cn("w-full", getButtonStyling("link", "lg"))}
+        >
           {t("auth.common.back_to_sign_in")}
         </Link>
       </form>

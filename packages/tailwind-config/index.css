@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "./variables.css";
+@import "./refract.css";
+@import "./refract-product.css";
+@import "./refract-components.css";
 @import "./animations.css";
 @source "../**/*.{ts,tsx}";
 

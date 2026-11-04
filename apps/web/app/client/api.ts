@@ -1,6 +1,8 @@
 // Copyright (c) 2023-present Plane Software, Inc. and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 import { useEffect, useState } from "react";
+import { visibleResource } from "./resource-state";
+import type { ResourceState } from "./resource-state";
 
 export type Portal = { name: string; slug: string };
 export type Session = {
@@ -74,23 +76,31 @@ export async function api<T>(
   }
   return result.json() as Promise<T>;
 }
-export function useResource<T>(path: string | null) {
-  const [value, setValue] = useState<{ path: string; data?: T; error?: string }>();
+export function useResource<T>(path: string | null, options?: { retainDataFor: string }) {
+  const retentionKey = options?.retainDataFor;
+  const [value, setValue] = useState<ResourceState<T>>();
   const [version, setVersion] = useState(0);
   useEffect(() => {
     if (!path) return;
     const controller = new AbortController();
-    setValue({ path });
+    setValue((previous) => ({
+      path,
+      retentionKey,
+      data: retentionKey && previous?.retentionKey === retentionKey ? previous.data : undefined,
+      loading: true,
+    }));
     api<T>(path, undefined, controller.signal)
-      .then((data) => setValue({ path, data }))
+      .then((data) => {
+        if (!controller.signal.aborted) setValue({ path, retentionKey, data });
+        return data;
+      })
       .catch((error: Error) => {
-        if (!controller.signal.aborted) setValue({ path, error: error.message });
+        if (!controller.signal.aborted) setValue({ path, retentionKey, error: error.message });
       });
     return () => controller.abort();
-  }, [path, version]);
+  }, [path, version, retentionKey]);
   return {
-    data: value?.path === path ? value.data : undefined,
-    error: value?.path === path ? value.error : undefined,
+    ...visibleResource(value, path, retentionKey),
     reload: () => setVersion((x) => x + 1),
   };
 }

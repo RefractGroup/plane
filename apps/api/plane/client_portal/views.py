@@ -36,6 +36,7 @@ from plane.license.models import InstanceAdmin
 from .models import ClientAccount, ClientPortal, ClientAccess, SharedDocument, ClientRequest, ClientAction
 from .middleware import is_client
 from .content import client_html
+from .work_view import work_view
 
 
 class ClientThrottle(UserRateThrottle):
@@ -220,6 +221,7 @@ class WorkView(PortalView):
             issues = issues.filter(name__icontains=request.query_params["search"][:200])
         if request.query_params.get("group"):
             issues = issues.filter(state__group=request.query_params["group"])
+        issues = work_view(issues, request.query_params)
         try:
             offset = max(0, int(request.query_params.get("offset", 0)))
         except ValueError:
@@ -230,7 +232,7 @@ class WorkView(PortalView):
                 "count": issues.count(),
                 "results": [
                     issue_record(i)
-                    for i in issues.order_by("state__sequence", "sort_order", "id")[offset : offset + 100]
+                    for i in issues[offset : offset + 100]
                 ],
             }
         )

@@ -1,0 +1,147 @@
+/* Refract semantic theme over Interfere primitives.
+ * Geometry, text hierarchy and surfaces informed by Cyna v2 @ 5552be4.
+ * Saunday supplies the restrained contact-shadow treatment. Refract keeps its own accent.
+ * Keep source palettes intact; brand decisions belong at the semantic layer. */
+@layer base {
+  :root,
+  [data-theme] {
+    --rf-action: #242726;
+    --rf-action-hover: #101311;
+    --rf-action-foreground: #ffffff;
+    --rf-field-fill: #f5f5f2;
+    --rf-radius-sm: 3px;
+    --rf-radius-md: 4px;
+    --rf-radius-lg: 5px;
+    --rf-radius-xl: 6px;
+    --rf-radius-2xl: 7px;
+    --rf-radius-3xl: 8px;
+    --rf-radius-4xl: 10px;
+    --rf-radius-5xl: 12px;
+  }
+  :root:not([data-theme]),
+  [data-theme="light"] {
+    --rf-action: #242726;
+    --rf-action-hover: #101311;
+    --rf-action-foreground: #ffffff;
+    --rf-field-fill: #f5f5f2;
+    --rf-page: #ffffff;
+    --rf-shell: #f6f6f4;
+    --rf-container: #fcfcfb;
+    --rf-container-recessed: #f7f7f5;
+    --rf-card: #ffffff;
+    --rf-primary-foreground: #202022;
+    --rf-secondary-foreground: #5f605f;
+    --rf-secondary-foreground-solid: #5f605f;
+    --rf-tertiary-foreground: #6a6b68;
+    --rf-paragraph-foreground: #414340;
+    --rf-brand-solid: #3659db;
+    --rf-brand-solid-hover: #2f50cb;
+    --rf-brand-solid-active: #2947b7;
+    --rf-brand-solid-disabled: #dbe3ff;
+    --rf-brand-subtle: #edf1ff;
+    --rf-brand-subtle-hover: #e4eaff;
+    --rf-brand-foreground: #3051c4;
+    --rf-on-brand-solid-foreground: #ffffff;
+    --rf-on-brand-subtle-foreground: #3051c4;
+    --rf-brand-border-subtle: #d5defa;
+    --rf-brand-border-focus: #4266e5;
+    --rf-border-default: #e9e9e5;
+    --rf-border-subtle: #efefec;
+    --rf-border-strong: #d1d2cc;
+    --rf-component: #eeefeb;
+    --rf-component-hover: #f5f5f2;
+    --rf-component-on-container-strong: #ffffff;
+    --rf-component-on-container-strong-hover: #f7f7f5;
+    --rf-positive-subtle: #eaf4ef;
+    --rf-positive-foreground: #256d4e;
+    --rf-warning-subtle: #fbf1df;
+    --rf-warning-foreground: #82520e;
+    --rf-danger-subtle: #fff0f1;
+    --rf-danger-foreground: #af3041;
+    --rf-highlight: #ffffff;
+    --rf-nav: #f6f6f4;
+    --rf-navy: #14213a;
+    --rf-chart-muted: #a9b9ef;
+    --rf-surface-edge: rgb(255 255 255 / 90%);
+    --rf-shadow-card: 0 1px 2px rgb(24 26 23 / 4%), 0 2px 4px rgb(24 26 23 / 2%);
+    --rf-shadow-raised: 0 4px 12px -2px rgb(24 26 23 / 6%), 0 2px 4px rgb(0 0 0 / 4%);
+    --rf-shadow-control: 0 1px 2px rgb(24 26 23 / 5%), inset 0 1px 0 rgb(255 255 255 / 60%);
+    --rf-shadow-action: 0 1px 2px rgb(0 0 0 / 8%), inset 0 1px 0 rgb(255 255 255 / 10%);
+    --rf-shadow-input: inset 0 1px 2px rgb(20 33 58 / 3%), 0 1px 0 rgb(255 255 255 / 80%);
+  }
+  [data-theme="dark"] {
+    --rf-action: #e6e8e5;
+    --rf-action-hover: #ffffff;
+    --rf-action-foreground: #1b1e1c;
+    --rf-field-fill: #262a29;
+    --rf-page: #1c2021;
+    --rf-shell: #171a19;
+    --rf-container: #1c201f;
+    --rf-container-recessed: #222625;
+    --rf-card: #252a28;
+    --rf-primary-foreground: #edf0f7;
+    --rf-secondary-foreground: #b7c0d1;
+    --rf-secondary-foreground-solid: #b7c0d1;
+    --rf-tertiary-foreground: #a2afc5;
+    --rf-paragraph-foreground: #c7cfde;
+    --rf-brand-solid: #4262df;
+    --rf-brand-solid-hover: #4969e6;
+    --rf-brand-solid-active: #3655cd;
+    --rf-brand-subtle: #253353;
+    --rf-brand-subtle-hover: #2d3d60;
+    --rf-brand-foreground: #a6bbff;
+    --rf-on-brand-solid-foreground: #ffffff;
+    --rf-on-brand-subtle-foreground: #a6bbff;
+    --rf-brand-border-subtle: #3d507c;
+    --rf-brand-border-focus: #819dff;
+    --rf-border-default: #363c39;
+    --rf-border-subtle: #2e3431;
+    --rf-border-strong: #59635e;
+    --rf-component: #2b302e;
+    --rf-component-hover: #2b312e;
+    --rf-component-on-container-strong: #2b322e;
+    --rf-component-on-container-strong-hover: #333d36;
+    --rf-positive-subtle: #203e32;
+    --rf-positive-foreground: #93dcb5;
+    --rf-warning-subtle: #3d3322;
+    --rf-warning-foreground: #efc482;
+    --rf-danger-subtle: #442a32;
+    --rf-danger-foreground: #ffacb8;
+    --rf-highlight: #364052;
+    --rf-nav: #1a1e1c;
+    --rf-chart-muted: #576fae;
+    --rf-surface-edge: rgb(255 255 255 / 8%);
+    --rf-shadow-card: 0 1px 2px #0003, 0 5px 12px -4px #0004, inset 0 1px 0 #ffffff08;
+    --rf-shadow-raised: 0 1px 2px #0004, 0 8px 18px -4px #0005, inset 0 1px 0 #ffffff0a;
+    --rf-shadow-control: 0 1px 2px #0003, inset 0 1px 0 #ffffff0e;
+    --rf-shadow-action: 0 1px 3px #0004, inset 0 1px 2px #ffffff30, inset 0 -2px 3px #0003;
+    --rf-shadow-input: inset 0 1px 2px #0002;
+  }
+  /* Contrast modes keep Plane's own palette. Shared controls read those
+   * existing roles instead of inheriting the light product colours. */
+  [data-theme="light-contrast"],
+  [data-theme="dark-contrast"] {
+    --rf-action: var(--txt-primary);
+    --rf-action-hover: var(--txt-secondary);
+    --rf-action-foreground: var(--bg-canvas);
+    --rf-field-fill: var(--bg-layer-1);
+    --rf-primary-foreground: var(--txt-primary);
+    --rf-secondary-foreground: var(--txt-secondary);
+    --rf-tertiary-foreground: var(--txt-tertiary);
+    --rf-component: var(--bg-layer-2);
+    --rf-component-hover: var(--bg-layer-2-hover);
+    --rf-component-on-container-strong: var(--bg-layer-1);
+    --rf-component-on-container-strong-hover: var(--bg-layer-1-hover);
+    --rf-border-strong: var(--border-strong);
+    --rf-brand-border-focus: var(--border-accent-strong);
+    --rf-shadow-control: none;
+    --rf-shadow-action: none;
+    --rf-shadow-input: none;
+  }
+  @media (prefers-contrast: more) {
+    :root {
+      --rf-border-default: #7c879b;
+      --rf-surface-edge: var(--rf-border-default);
+    }
+  }
+}

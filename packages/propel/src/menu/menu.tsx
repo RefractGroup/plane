@@ -13,6 +13,7 @@ import type { TMenuProps, TSubMenuProps, TMenuItemProps } from "./types";
 
 // Context for main menu to communicate with submenus
 const MenuContext = React.createContext<{
+  closeOnSelect: boolean;
   closeAllSubmenus: () => void;
   registerSubmenu: (closeSubmenu: () => void) => () => void;
 } | null>(null);
@@ -44,20 +45,21 @@ function SubMenu(props: TSubMenuProps) {
 
 function MenuItem(props: TMenuItemProps) {
   const { children, disabled = false, onClick, className } = props;
+  const menuContext = React.useContext(MenuContext);
   const submenuContext = useSubMenu();
 
   return (
     <BaseMenu.Item
       disabled={disabled}
+      closeOnClick={menuContext?.closeOnSelect ?? true}
       className={cn(
-        "w-full cursor-pointer truncate rounded-sm px-1 py-1.5 text-left text-secondary outline-none select-none hover:bg-layer-1",
+        "flex w-full cursor-pointer items-center gap-2 truncate rounded-sm px-1 py-1.5 text-left text-secondary outline-none select-none hover:bg-layer-1 data-[highlighted]:bg-layer-1 data-[highlighted]:text-primary",
         {
           "text-placeholder": disabled,
         },
         className
       )}
       onClick={(e) => {
-        close();
         onClick?.(e);
         submenuContext?.closeSubmenu();
       }}
@@ -86,6 +88,7 @@ function Menu(props: TMenuProps) {
     verticalEllipsis = false,
     menuButtonOnClick,
     onMenuClose,
+    closeOnSelect = true,
     tabIndex,
     openOnHover = false,
     handleOpenChange = () => {},
@@ -105,31 +108,29 @@ function Menu(props: TMenuProps) {
       submenuClosersRef.current.delete(closeSubmenu);
     };
   }, []);
-  const openDropdown = () => {
-    setIsOpen(true);
-  };
-
-  const closeDropdown = React.useCallback(() => {
-    if (isOpen) {
-      closeAllSubmenus();
-      onMenuClose?.();
-    }
-    setIsOpen(false);
-  }, [isOpen, closeAllSubmenus, onMenuClose]);
+  const menuContextValue = React.useMemo(
+    () => ({ closeAllSubmenus, registerSubmenu, closeOnSelect }),
+    [closeAllSubmenus, registerSubmenu, closeOnSelect]
+  );
 
   const handleMenuButtonClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.stopPropagation();
-    e.preventDefault();
-    if (isOpen) {
-      closeDropdown();
-    } else {
-      openDropdown();
-    }
     if (menuButtonOnClick) menuButtonOnClick();
   };
 
   return (
-    <BaseMenu.Root openOnHover={openOnHover} onOpenChange={handleOpenChange}>
+    <BaseMenu.Root
+      open={isOpen}
+      openOnHover={openOnHover}
+      onOpenChange={(open) => {
+        setIsOpen(open);
+        if (!open) {
+          closeAllSubmenus();
+          onMenuClose?.();
+        }
+        handleOpenChange(open);
+      }}
+    >
       {customButton ? (
         <BaseMenu.Trigger
           type="button"
@@ -197,7 +198,7 @@ function Menu(props: TMenuProps) {
             )}
             data-main-menu="true"
           >
-            <MenuContext.Provider value={{ closeAllSubmenus, registerSubmenu }}>{children}</MenuContext.Provider>
+            <MenuContext.Provider value={menuContextValue}>{children}</MenuContext.Provider>
           </BaseMenu.Popup>
         </BaseMenu.Positioner>
       </BaseMenu.Portal>

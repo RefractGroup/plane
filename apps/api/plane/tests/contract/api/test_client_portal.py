@@ -458,3 +458,47 @@ def test_home_panels_are_admin_managed_and_preview_is_scoped(client_api, portal_
         assert staff.post(path, {"action": "home", "performance_panels": value}, format="json").status_code == 400
     assert staff.post(path, {"action": "home", "performance_panels": []}, format="json").status_code == 200
     assert client_api.get("/api/client/client-a/home/").json()["performance_panels"] == []
+
+
+def test_work_view_filters_and_sort_keep_client_scope(client_api, portal_fixture):
+    from datetime import timedelta
+
+    f = portal_fixture
+    today = timezone.localdate()
+    Issue.objects.filter(id=f["issue"].id).update(priority="high", target_date=today - timedelta(days=1))
+    Issue.objects.filter(id__in=[f["hidden"].id, f["foreign"].id]).update(
+        priority="urgent", target_date=today - timedelta(days=2)
+    )
+    url = "/api/client/client-a/work/"
+    for params in [{"view": "overdue"}, {"view": "active", "priority": "high"}, {"sort": "priority"}, {"sort": "due"}]:
+        result = client_api.get(url, params).json()
+        assert result["count"] == 1
+        assert [row["id"] for row in result["results"]] == [str(f["issue"].id)]
+    assert client_api.get(url, {"priority": "urgent"}).json()["count"] == 0
+    done = State.objects.create(workspace=f["workspace"], project=f["p"], name="Done", group="completed")
+    Issue.objects.filter(id=f["issue"].id).update(state=done)
+    assert client_api.get(url, {"view": "overdue"}).json()["count"] == 0
+    assert client_api.get(url, {"view": "active"}).json()["count"] == 0
+    assert client_api.get(url, {"view": "completed"}).json()["count"] == 1
+
+
+def test_work_sort_filters_before_pagination_and_puts_undated_last(client_api, portal_fixture):
+    from datetime import timedelta
+
+    f = portal_fixture
+    today = timezone.localdate()
+    for index, (priority, due) in enumerate([("urgent", today), ("low", today + timedelta(days=2)), ("high", None)]):
+        item = Issue.objects.create(workspace=f["workspace"], project=f["p"], state=f["state"],
+                                    name=f"Ordered {index}", priority=priority, target_date=due)
+        item.labels.add(f["label"], through_defaults={"project": f["p"], "workspace": f["workspace"]})
+    url = "/api/client/client-a/work/"
+    by_due = client_api.get(url, {"sort": "due", "search": "Ordered"}).json()
+    assert [r["name"] for r in by_due["results"]] == ["Ordered 0", "Ordered 1", "Ordered 2"]
+    by_priority = client_api.get(url, {"sort": "priority", "search": "Ordered", "offset": 1}).json()
+    assert by_priority["count"] == 3
+    assert [r["priority"] for r in by_priority["results"]] == ["high", "low"]
+
+
+@pytest.mark.parametrize("params", [{"view": "unknown"}, {"sort": "password"}, {"priority": "invalid"}])
+def test_invalid_work_view_is_rejected(client_api, params):
+    assert client_api.get("/api/client/client-a/work/", params).status_code == 400

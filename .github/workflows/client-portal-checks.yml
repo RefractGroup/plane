@@ -1,9 +1,9 @@
 name: Client portal checks
 on:
   pull_request:
-    branches: [morse]
+    branches: [morse, main]
   push:
-    branches: [refract-branding]
+    branches: [refract-branding, main]
 permissions:
   contents: read
 jobs:
@@ -20,6 +20,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm turbo run build --filter=web
       - run: pnpm --filter web check:types
+      - run: node --experimental-strip-types --test apps/web/tests/client-*.test.mjs
       - run: pnpm exec oxlint --deny-warnings apps/web/app/client
   boundaries:
     runs-on: ubuntu-latest

@@ -2,14 +2,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
-import { Link, useLocation, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate, useBlocker } from "react-router";
 import {
   Home,
   Eye,
   EyeOff,
   ArrowRight,
-  LockKeyhole,
   ChevronRight,
+  ChevronLeft,
+  Link2,
+  Check,
   ChevronDown,
   Globe,
   PanelLeftClose,
@@ -23,20 +25,24 @@ import {
   Paperclip,
   Plus,
   Search,
+  UserRound,
   X,
-} from "lucide-react";
+} from "@plane/propel/refract-icons";
 import { Button } from "@plane/propel/button";
 import { Input } from "@plane/propel/input";
-import { PlaneLogo, PriorityIcon, WorkItemsIcon, PageIcon, IntakeIcon, AddWorkItemIcon } from "@plane/propel/icons";
+import { PlaneLogo } from "@plane/propel/icons";
+import { WorkItemsIcon, PageIcon, IntakeIcon, Flag, Collapse } from "@plane/propel/refract-icons";
 import { Avatar } from "@plane/propel/avatar";
 import { Menu as NativeMenu } from "@plane/propel/menu";
 import { IconButton } from "@plane/propel/icon-button";
 import { ModalCore } from "@plane/ui";
 import { Dialog } from "@headlessui/react";
 import { WorkItemPeekFrame } from "@/components/issues/peek-overview/frame";
-import { SidebarAddButton } from "@/components/sidebar/add-button";
+import { RefractAuthArtwork } from "@/components/auth-screens/refract-auth-frame";
 import { ClientHome } from "./home";
-import { ClientWorkList, ClientStateIcon as Status } from "./work-list";
+import { ClientAccount } from "./account";
+import { ClientWorkList, ClientPriority, ClientStateIcon as Status } from "./work-list";
+import { ClientDocuments as Documents } from "./documents";
 import { SidebarNavItem } from "@/components/sidebar/sidebar-navigation";
 import { LogoSpinner } from "@/components/common/logo-spinner";
 import { api, csrf, shortDate, useResource } from "./api";
@@ -82,94 +88,89 @@ function Login() {
   }, []);
   const failed = new URLSearchParams(useLocation().search).has("error_code");
   return (
-    <div className="client-portal client-login flex min-h-dvh flex-col bg-canvas text-primary">
-      <header className="flex items-center justify-between px-6 py-6 sm:px-10">
-        <div className="flex items-center gap-2.5">
+    <div className="client-portal client-login text-primary">
+      <RefractAuthArtwork />
+      <main className="client-login-main">
+        <header className="client-auth-brand flex items-center gap-2.5">
           <PlaneLogo width={27} height={27} />
           <span className="text-20 font-semibold tracking-tight">Refract</span>
-        </div>
-        <span className="text-12 text-tertiary">Client workspace</span>
-      </header>
-      <main className="flex flex-1 items-center justify-center px-5 py-10 sm:pb-24">
-        <div className="w-full max-w-[420px]">
-          <div className="client-login-card rounded-xl border border-subtle bg-surface-1 p-7 sm:p-9">
-            <div className="client-home-icon mb-6 flex size-11 items-center justify-center rounded-xl border border-subtle text-accent-primary">
-              <LockKeyhole size={20} strokeWidth={1.5} aria-hidden="true" />
+        </header>
+        <div className="client-login-form">
+          <p className="client-auth-eyebrow">CLIENT WORKSPACE</p>
+          <h1>Welcome back</h1>
+          <p className="mt-2 text-13 leading-relaxed text-secondary">Sign in to your Refract workspace.</p>
+          {(error || failed) && (
+            <div className="mt-5">
+              <ErrorMessage error={error || "We couldn’t sign you in. Check your email and password and try again."} />
             </div>
-            <h1 className="text-[28px] leading-tight font-semibold tracking-tight">Welcome back</h1>
-            <p className="mt-2 text-14 leading-relaxed text-secondary">
-              Your projects, updates and conversations.
-              <br />
-              All in one place.
-            </p>
-            {(error || failed) && (
-              <div className="mt-5">
-                <ErrorMessage
-                  error={error || "We couldn’t sign you in. Check your email and password and try again."}
-                />
+          )}
+          <form action="/auth/sign-in/" method="post" className="mt-7 space-y-5" onSubmit={() => setSigningIn(true)}>
+            <input type="hidden" name="csrfmiddlewaretoken" value={token} />
+            <input type="hidden" name="next_path" value="/client/" />
+            <label htmlFor="client-email" className="block text-13 font-medium">
+              Email address
+              <Input
+                id="client-email"
+                className="client-auth-input mt-2 w-full"
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="you@company.com"
+              />
+            </label>
+            <div>
+              <div className="mb-2 flex items-center justify-between gap-3 text-13">
+                <label htmlFor="client-password" className="font-medium">
+                  Password
+                </label>
+                <a
+                  href="/accounts/forgot-password/?next_path=/client/"
+                  className="text-12 text-secondary hover:text-accent-primary"
+                >
+                  Forgot password?
+                </a>
               </div>
-            )}
-            <form action="/auth/sign-in/" method="post" className="mt-7 space-y-5" onSubmit={() => setSigningIn(true)}>
-              <input type="hidden" name="csrfmiddlewaretoken" value={token} />
-              <input type="hidden" name="next_path" value="/client/" />
-              <label htmlFor="client-email" className="block text-13 font-medium">
-                Email address
+              <div className="relative">
                 <Input
-                  id="client-email"
-                  className="client-auth-input mt-2 w-full"
-                  name="email"
-                  type="email"
+                  id="client-password"
+                  className="client-auth-input w-full pr-11"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
                   required
-                  autoComplete="email"
-                  placeholder="you@company.com"
+                  autoComplete="current-password"
+                  placeholder="Enter your password"
                 />
-              </label>
-              <div>
-                <div className="mb-2 flex items-center justify-between gap-3 text-13">
-                  <label htmlFor="client-password" className="font-medium">
-                    Password
-                  </label>
-                  <a href="/accounts/forgot-password/" className="text-12 text-secondary hover:text-accent-primary">
-                    Forgot password?
-                  </a>
-                </div>
-                <div className="relative">
-                  <Input
-                    id="client-password"
-                    className="client-auth-input w-full pr-11"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    required
-                    autoComplete="current-password"
-                    placeholder="Enter your password"
-                  />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-1 flex w-9 items-center justify-center rounded-md text-tertiary hover:text-primary"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    aria-pressed={showPassword}
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-1 flex w-9 items-center justify-center rounded-md text-tertiary hover:text-primary"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
-              <Button
-                type="submit"
-                size="lg"
-                className="client-sign-in w-full justify-center gap-2"
-                disabled={!token || signingIn}
-              >
-                {signingIn ? "Signing in…" : "Sign in"}
-                <ArrowRight size={15} aria-hidden="true" />
-              </Button>
-            </form>
-            <div className="mt-7 border-t border-subtle pt-5 text-12 leading-relaxed text-tertiary">
-              Need access? <span className="text-secondary">Contact your Refract team.</span>
             </div>
-          </div>
-          <p className="mt-6 text-center text-12 text-tertiary">A shared space for you and your Refract team.</p>
+            <Button
+              type="submit"
+              size="lg"
+              className="client-sign-in w-full justify-center gap-2"
+              disabled={!token || signingIn}
+              aria-busy={signingIn}
+            >
+              {signingIn ? "Signing in…" : "Sign in"}
+              <ArrowRight size={15} aria-hidden="true" />
+            </Button>
+          </form>
+
+          <p className="client-auth-access">
+            Access is by invitation.
+            <br />
+            Contact your Refract team if you need a hand.
+          </p>
         </div>
+        <p className="client-login-caption">Your projects. Your team. All in one place.</p>
       </main>
     </div>
   );
@@ -179,7 +180,7 @@ function SignOut() {
   return (
     <>
       <button
-        className="flex items-center gap-2 text-13 text-secondary hover:text-primary"
+        className="rf-button rf-button--secondary rf-button--lg"
         onClick={async () => {
           try {
             await api("sign-out/", {});
@@ -203,7 +204,6 @@ export default function ClientPortalPage() {
   const session = useResource<Session>("session/");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [projectOpen, setProjectOpen] = useState(true);
   const parts = location.pathname.split("/").filter(Boolean);
   const slug = parts[1] || "";
   const section = parts[2] || "home";
@@ -242,7 +242,7 @@ export default function ClientPortalPage() {
     );
   return (
     <div className="client-portal flex h-screen flex-col bg-canvas text-primary">
-      <header className="z-[27] flex min-h-10 w-full shrink-0 items-center bg-canvas px-3.5">
+      <header className="client-global-header z-[27] flex min-h-10 w-full shrink-0 items-center px-3.5">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <button className="md:hidden" aria-label="Open navigation" onClick={() => setMobileOpen(!mobileOpen)}>
             <Menu size={18} />
@@ -254,14 +254,17 @@ export default function ClientPortalPage() {
           )}
           <NativeMenu
             ariaLabel="Open workspace switcher"
+            optionsClassName="client-menu"
+            maxHeight="lg"
+            noChevron
             noBorder
             customButton={
               <span className="flex items-center gap-2">
-                <span className="flex size-7 items-center justify-center rounded-md bg-accent-primary text-12 text-on-color">
-                  R
+                <span className="client-brand-mark flex size-7 items-center justify-center">
+                  <PlaneLogo width={21} height={21} />
                 </span>
                 <span className="text-14 font-medium">Refract</span>
-                <ChevronDown className="size-3 text-tertiary" />
+                <ChevronDown size={14} className="text-tertiary" />
               </span>
             }
           >
@@ -286,11 +289,13 @@ export default function ClientPortalPage() {
               navigate(`${href("work")}${suffix ? "&" : "?"}q=${encodeURIComponent(query)}`);
             }}
           >
-            <div className="flex h-7 items-center gap-2 rounded-md border border-subtle bg-surface-1 px-3 text-tertiary">
+            <div className="client-global-search flex h-7 items-center gap-2 rounded-md px-3">
               <Search size={14} />
               <input
+                key={location.pathname + location.search}
                 aria-label="Search shared work"
                 name="q"
+                defaultValue={new URLSearchParams(location.search).get("q") || ""}
                 placeholder="Search work items..."
                 className="min-w-0 flex-1 bg-transparent text-13 outline-none"
               />
@@ -300,6 +305,7 @@ export default function ClientPortalPage() {
         <div className="flex flex-1 items-center justify-end">
           <NativeMenu
             ariaLabel="Your account"
+            optionsClassName="client-menu"
             noBorder
             noChevron
             customButton={
@@ -307,8 +313,8 @@ export default function ClientPortalPage() {
                 <Avatar
                   name={user.name}
                   fallbackText={(user.name || user.email)[0].toUpperCase()}
-                  fallbackBackgroundColor="#348678"
-                  fallbackTextColor="#ffffff"
+                  fallbackBackgroundColor="var(--rf-component)"
+                  fallbackTextColor="var(--rf-primary-foreground)"
                   size="md"
                 />
               </span>
@@ -328,7 +334,7 @@ export default function ClientPortalPage() {
           </NativeMenu>
         </div>
       </header>
-      <div className="relative mx-2 mb-2 flex min-h-0 flex-1 overflow-hidden rounded-md bg-surface-1">
+      <div className="client-shell relative flex min-h-0 flex-1 overflow-hidden">
         {mobileOpen && (
           <button
             className="absolute inset-0 z-20 bg-black/20 md:hidden"
@@ -338,11 +344,17 @@ export default function ClientPortalPage() {
         )}
         <aside
           aria-label="Client navigation"
-          className={`${mobileOpen ? "flex" : "hidden"} ${sidebarOpen ? "md:flex" : "md:hidden"} absolute inset-y-0 left-0 z-30 w-[250px] shrink-0 flex-col border-r border-subtle bg-surface-1 pt-3 md:static`}
+          className={`client-sidebar ${mobileOpen ? "flex" : "hidden"} ${sidebarOpen ? "md:flex" : "md:hidden"} absolute inset-y-0 left-0 z-30 w-[224px] shrink-0 flex-col pt-3 md:static`}
         >
           <div className="flex flex-col gap-3 px-3">
             <div className="flex items-center justify-between gap-2 px-2">
-              <span className="pt-1 text-16 font-medium">Workspace</span>
+              <div className="client-workspace-identity">
+                <span className="client-workspace-monogram">{(portal?.name || "R")[0]}</span>
+                <div>
+                  <strong>{portal?.name || "Client workspaces"}</strong>
+                  <small>Client workspace</small>
+                </div>
+              </div>
               <IconButton
                 aria-label="Collapse sidebar"
                 variant="ghost"
@@ -355,70 +367,46 @@ export default function ClientPortalPage() {
               />
             </div>
             {portal && (
-              <SidebarAddButton
-                label={
-                  <span className="flex items-center gap-2">
-                    <AddWorkItemIcon className="size-4" />
-                    New request
-                  </span>
-                }
+              <button
+                className="rf-button rf-button--primary client-sidebar-create"
                 disabled={preview}
-                onClick={() => navigate(href("new"))}
-              />
+                onClick={() => navigate(href("new"), { state: { returnTo: location.pathname + location.search } })}
+              >
+                <Plus size={14} />
+                New request
+              </button>
             )}
           </div>
-          <div className="flex-1 overflow-auto px-3 pt-6">
-            {portal && (
-              <Link to={href("home")} aria-current={section === "home" ? "page" : undefined} className="mb-6 block">
-                <SidebarNavItem isActive={section === "home"}>
-                  <span className="flex items-center gap-2 text-13">
-                    <Home className="size-4" />
-                    Home
-                  </span>
-                </SidebarNavItem>
-              </Link>
-            )}
-            <div className="mb-3 flex items-center justify-between px-2 text-13 font-medium text-tertiary">
-              <span>Projects</span>
-              <ChevronDown size={14} />
-            </div>
+          <div className="flex-1 overflow-auto px-3 pt-5">
+            <p className="client-nav-label">Workspace</p>
             {portal ? (
-              <>
-                <button
-                  aria-expanded={projectOpen}
-                  onClick={() => setProjectOpen(!projectOpen)}
-                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-13 text-secondary hover:bg-layer-transparent-hover"
-                >
-                  <Globe className="size-4 shrink-0 text-accent-primary" />
-                  <span className="flex-1 truncate">{portal.name}</span>
-                  <ChevronDown className={`size-3 ${projectOpen ? "" : "-rotate-90"}`} />
-                </button>
-                {projectOpen && (
-                  <nav className="ml-6 space-y-0.5 pt-1 pb-3">
-                    {[
-                      ["work", "Work items", WorkItemsIcon],
-                      ["documents", "Pages", PageIcon],
-                      ["requests", "Requests", IntakeIcon],
-                    ].map(([path, title, Icon]) => {
-                      const I = Icon as typeof WorkItemsIcon;
-                      return (
-                        <Link
-                          key={String(path)}
-                          to={href(String(path))}
-                          aria-current={section === path ? "page" : undefined}
-                        >
-                          <SidebarNavItem isActive={section === path}>
-                            <span className="flex items-center gap-2 text-12 leading-5">
-                              <I className="size-3.5" />
-                              {String(title)}
-                            </span>
-                          </SidebarNavItem>
-                        </Link>
-                      );
-                    })}
-                  </nav>
-                )}
-              </>
+              <nav className="space-y-1" aria-label="Workspace">
+                {[
+                  ["home", "Home", Home],
+                  ["work", "Work items", WorkItemsIcon],
+                  ["documents", "Pages", PageIcon],
+                  ["requests", "Requests", IntakeIcon],
+                ].map(([path, title, Icon]) => {
+                  const I = Icon as typeof WorkItemsIcon;
+                  return (
+                    <Link
+                      key={String(path)}
+                      to={href(String(path))}
+                      aria-current={section === path ? "page" : undefined}
+                    >
+                      <SidebarNavItem
+                        isActive={section === path}
+                        className={section === path ? "!bg-[var(--rf-card)]" : undefined}
+                      >
+                        <span className="flex items-center gap-2.5 text-13 leading-5">
+                          <I size={18} weight={section === path ? "fill" : "regular"} />
+                          {String(title)}
+                        </span>
+                      </SidebarNavItem>
+                    </Link>
+                  );
+                })}
+              </nav>
             ) : (
               <Link to="/client/">
                 <SidebarNavItem isActive>
@@ -427,8 +415,27 @@ export default function ClientPortalPage() {
               </Link>
             )}
           </div>
+          {portal && (
+            <div className="client-sidebar-footer">
+              <Link
+                to={href("account")}
+                className="client-sidebar-account"
+                aria-current={section === "account" ? "page" : undefined}
+              >
+                <span className="client-user-initial">{(user.name || user.email)[0].toUpperCase()}</span>
+                <span>
+                  <strong>{user.name || "My account"}</strong>
+                  <small>{user.email}</small>
+                </span>
+                <UserRound size={15} />
+              </Link>
+              <span className="client-sidebar-wordmark">
+                Your workspace with <strong>Refract</strong>
+              </span>
+            </div>
+          )}
         </aside>
-        <main className="relative min-w-0 flex-1 overflow-auto">
+        <main className="client-main relative min-w-0 flex-1 overflow-auto">
           {preview && (
             <div className="flex items-center justify-between border-b border-subtle-1 bg-layer-1 px-6 py-2 text-12 text-secondary">
               <span>Client preview · read only</span>
@@ -439,43 +446,37 @@ export default function ClientPortalPage() {
           )}
           {!portal ? (
             <WorkspacePicker session={session.data} reload={session.reload} manage={slug === "manage"} />
-          ) : section === "home" ? (
+          ) : section === "home" ||
+            (section === "new" &&
+              (location.state as { returnTo?: string } | null)?.returnTo?.split("?")[0] === `/client/${slug}/home`) ? (
             <ClientHome slug={slug} suffix={suffix} name={user.name} />
           ) : section === "account" ? (
-            <div className="mx-auto max-w-3xl px-6 py-10 sm:px-8">
-              <h1 className="mb-8 text-24 font-medium">My account</h1>
-              <dl className="client-surface divide-y divide-subtle rounded-lg border border-subtle px-6 text-14 [&>div]:py-5">
-                <div>
-                  <dt className="text-secondary">Name</dt>
-                  <dd className="mt-1">{user.name}</dd>
-                </div>
-                <div>
-                  <dt className="text-secondary">Email</dt>
-                  <dd className="mt-1">{user.email}</dd>
-                </div>
-                <div>
-                  <dt className="text-secondary">Workspace</dt>
-                  <dd className="mt-1">{portal.name}</dd>
-                </div>
-              </dl>
-              <div className="mt-10">
-                <SignOut />
-              </div>
-            </div>
+            <ClientAccount name={user.name} email={user.email} workspace={portal.name}>
+              <SignOut />
+            </ClientAccount>
           ) : section === "documents" ? (
             <Documents slug={slug} id={resource} suffix={suffix} />
           ) : (
             <ClientWorkList
               slug={slug}
               suffix={suffix}
-              requests={section === "requests"}
+              requests={section === "requests" || new URLSearchParams(location.search).get("source") === "requests"}
               preview={preview}
               projectName={portal.name}
             />
           )}
         </main>
         {portal && section === "new" && (
-          <ModalCore isOpen handleClose={() => navigate(href("requests"))}>
+          <ModalCore
+            isOpen
+            handleClose={() =>
+              navigate(
+                (location.state as { returnTo?: string } | null)?.returnTo?.startsWith(`/client/${slug}/`)
+                  ? location.state.returnTo
+                  : href("requests")
+              )
+            }
+          >
             <RequestForm slug={slug} preview={preview} />
           </ModalCore>
         )}
@@ -487,80 +488,44 @@ export default function ClientPortalPage() {
   );
 }
 
-function Documents({ slug, id, suffix }: { slug: string; id?: string; suffix: string }) {
-  const list = useResource<{ results: Doc[] }>(id ? null : `${slug}/documents/${suffix}`);
-  const detail = useResource<Doc>(id ? `${slug}/documents/${id}/${suffix}` : null);
-  const error = list.error || detail.error;
-  return (
-    <>
-      <div className="flex h-11 items-center gap-2 border-b border-subtle px-page-x text-14">
-        <Link to={`/client/${slug}/documents${suffix}`} className="flex items-center gap-2">
-          <PageIcon className="size-4" />
-          Pages
-        </Link>
-        {id && (
-          <>
-            <ChevronRight size={14} />
-            <span className="truncate text-secondary">{detail.data?.name || "Document"}</span>
-          </>
-        )}
-      </div>
-      {error ? (
-        <Message>{error}</Message>
-      ) : id ? (
-        !detail.data ? (
-          <Loading />
-        ) : (
-          <article className="mx-auto max-w-4xl px-6 py-12 sm:px-12">
-            <div className="client-home-icon mb-6 flex size-12 items-center justify-center rounded-lg border border-subtle text-accent-primary">
-              <FileText size={24} strokeWidth={1.5} />
-            </div>
-            <h1 className="mb-3 text-[30px] leading-tight font-semibold tracking-tight">{detail.data.name}</h1>
-            <p className="mb-10 text-12 text-tertiary">Updated {shortDate(detail.data.updated_at)}</p>
-            <Html value={detail.data.description_html || ""} />
-          </article>
-        )
-      ) : !list.data ? (
-        <Loading />
-      ) : !list.data.results.length ? (
-        <Message>Your team hasn’t shared any documents yet.</Message>
-      ) : (
-        <div className="px-page-x py-6">
-          <div className="client-surface overflow-hidden rounded-lg border border-subtle">
-            <div className="grid grid-cols-[1fr_auto] border-b border-subtle px-4 py-3 text-12 text-tertiary">
-              <span>Name</span>
-              <span>Updated</span>
-            </div>
-            {list.data.results.map((doc) => (
-              <Link
-                key={doc.id}
-                className="client-document-row group flex min-h-11 items-center gap-3 border-b border-subtle px-4 py-3 last:border-b-0 hover:bg-layer-transparent-hover"
-                to={`/client/${slug}/documents/${doc.id}${suffix}`}
-              >
-                <span className="client-home-icon flex size-8 shrink-0 items-center justify-center rounded-md border border-subtle text-secondary">
-                  <FileText size={16} strokeWidth={1.5} />
-                </span>
-                <span className="min-w-0 flex-1 truncate text-14">{doc.name}</span>
-                <span className="shrink-0 text-12 text-tertiary">{shortDate(doc.updated_at)}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
 function ClientTaskPeek(props: { slug: string; id: string; suffix: string; preview: boolean }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [expanded, setExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState("");
+  const [dirty, setDirty] = useState(false);
+  const blocker = useBlocker(dirty);
   const panel = useRef<HTMLDivElement>(null);
+  const context = location.state as { returnTo?: string; workIds?: string[] } | null;
+  const returnTo = context?.returnTo?.startsWith(`/client/${props.slug}/`)
+    ? context.returnTo
+    : `/client/${props.slug}/${new URLSearchParams(location.search).get("source") === "requests" ? "requests" : "work"}${location.search}`;
+  const ids = context?.workIds || [];
+  const index = ids.indexOf(props.id);
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     panel.current?.focus();
     return () => previous?.focus();
   }, []);
-  const close = () => navigate(`/client/${props.slug}/work${props.suffix}`);
+  useEffect(() => {
+    setCopied(false);
+    setCopyError("");
+  }, [props.id]);
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => {
+      if (dirty) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+  const leave = (path: string) => {
+    navigate(path, { state: context });
+  };
+  const close = () => leave(returnTo);
   return (
     <WorkItemPeekFrame
       ref={panel}
@@ -568,6 +533,7 @@ function ClientTaskPeek(props: { slug: string; id: string; suffix: string; previ
       role="dialog"
       aria-label="Work item details"
       tabIndex={-1}
+      className="client-detail-frame"
       onKeyDown={(event) => {
         if (event.key === "Escape") {
           event.stopPropagation();
@@ -576,29 +542,131 @@ function ClientTaskPeek(props: { slug: string; id: string; suffix: string; previ
       }}
     >
       <div className="flex h-12 shrink-0 items-center gap-1 border-b border-subtle px-3">
-        <button className="client-icon-control" aria-label="Close work item" onClick={close}>
-          <MoveRight className="size-4 text-tertiary hover:text-secondary" />
+        <button className="client-icon-control" aria-label="Close work item" title="Close · Esc" onClick={close}>
+          <MoveRight className="size-4" />
         </button>
         <button
           className="client-icon-control"
           aria-label={expanded ? "Return to side peek" : "Expand work item"}
+          title={expanded ? "Return to side peek" : "Expand work item"}
           onClick={() => setExpanded(!expanded)}
         >
-          <MoveDiagonal className="size-4 text-tertiary hover:text-secondary" />
+          {expanded ? <Collapse /> : <MoveDiagonal />}
         </button>
+        <span className="ml-2 flex-1 text-12 text-secondary">Work item</span>
+        {index >= 0 && (
+          <>
+            <span className="mr-2 text-11 text-tertiary tabular-nums">
+              {index + 1} / {ids.length}
+            </span>
+            <button
+              className="client-icon-control disabled:opacity-30"
+              aria-label="Previous work item"
+              disabled={index === 0}
+              onClick={() => leave(`/client/${props.slug}/work/${ids[index - 1]}${location.search}`)}
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              className="client-icon-control disabled:opacity-30"
+              aria-label="Next work item"
+              disabled={index === ids.length - 1}
+              onClick={() => leave(`/client/${props.slug}/work/${ids[index + 1]}${location.search}`)}
+            >
+              <ChevronRight size={16} />
+            </button>
+          </>
+        )}
+        <button
+          className="client-icon-control"
+          aria-label={copied ? "Link copied" : "Copy work item link"}
+          title={copied ? "Link copied" : "Copy link"}
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(
+                `${window.location.origin}/client/${props.slug}/work/${props.id}${props.suffix}`
+              );
+              setCopied(true);
+              setCopyError("");
+            } catch {
+              setCopyError("Couldn’t copy the link. Copy the address from your browser instead.");
+            }
+          }}
+        >
+          {copied ? <Check size={15} /> : <Link2 size={15} />}
+        </button>
+        <span className="sr-only" role="status">
+          {copied ? "Link copied" : ""}
+        </span>
       </div>
+      {copyError && (
+        <p role="alert" className="px-4 py-2 text-12 text-secondary">
+          {copyError}
+        </p>
+      )}
+      <Dialog
+        open={blocker.state === "blocked"}
+        onClose={() => blocker.state === "blocked" && blocker.reset()}
+        className="client-portal relative z-[60]"
+        onKeyDown={(event) => {
+          if (event.key === "Escape") event.stopPropagation();
+        }}
+      >
+        <div className="fixed inset-0 bg-backdrop" aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-5">
+          <Dialog.Panel className="w-full max-w-md rounded-lg border border-subtle bg-surface-1 p-6 shadow-raised-200">
+            <Dialog.Title className="text-16 font-medium">Discard your unsent comment?</Dialog.Title>
+            <Dialog.Description className="mt-2 text-13 leading-relaxed text-secondary">
+              Your comment hasn’t been sent. Keep editing to finish it, or discard it to leave this work item.
+            </Dialog.Description>
+            <div className="mt-6 flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => blocker.state === "blocked" && blocker.reset()}>
+                Keep editing
+              </Button>
+              <Button
+                variant="error-fill"
+                onClick={() => {
+                  if (blocker.state === "blocked") {
+                    setDirty(false);
+                    blocker.proceed();
+                  }
+                }}
+              >
+                Discard comment
+              </Button>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
       <div className="vertical-scrollbar scrollbar-md min-h-0 flex-1 overflow-y-auto">
-        <TaskDetail {...props} />
+        <TaskDetail key={props.id} {...props} onDirtyChange={setDirty} />
       </div>
     </WorkItemPeekFrame>
   );
 }
 
-function TaskDetail({ slug, id, suffix, preview }: { slug: string; id: string; suffix: string; preview: boolean }) {
+function TaskDetail({
+  slug,
+  id,
+  suffix,
+  preview,
+  onDirtyChange,
+}: {
+  slug: string;
+  id: string;
+  suffix: string;
+  preview: boolean;
+  onDirtyChange: (dirty: boolean) => void;
+}) {
   const { data, error, reload } = useResource<Task>(`${slug}/work/${id}/${suffix}`);
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState("");
+  const [saved, setSaved] = useState("");
+  const replyInput = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (saved.startsWith("Comment") && !busy && data) replyInput.current?.focus();
+  }, [saved, busy, data]);
   const operation = useRef(crypto.randomUUID());
   const fileOperation = useRef(crypto.randomUUID());
   useEffect(() => {
@@ -608,11 +676,15 @@ function TaskDetail({ slug, id, suffix, preview }: { slug: string; id: string; s
   }, [id]);
   async function reply(e: FormEvent) {
     e.preventDefault();
+    if (busy || !body.trim()) return;
     setBusy(true);
     setFailure("");
+    setSaved("");
     try {
       await api(`${slug}/work/${id}/`, { body, operation_id: operation.current });
       setBody("");
+      onDirtyChange(false);
+      setSaved("Comment sent to your Refract team.");
       operation.current = crypto.randomUUID();
       reload();
     } catch (caught) {
@@ -621,152 +693,217 @@ function TaskDetail({ slug, id, suffix, preview }: { slug: string; id: string; s
       setBusy(false);
     }
   }
-  if (error) return <Message>{error}</Message>;
+  if (error)
+    return (
+      <Message>
+        {error}{" "}
+        <button className="underline" onClick={reload}>
+          Try again
+        </button>
+      </Message>
+    );
   if (!data) return <Loading />;
   return (
     <>
-      <article className="client-task min-w-0 px-5 py-6 sm:px-8">
-        <p className="mb-2 text-12 text-tertiary">#{data.sequence}</p>
-        <h1 className="mb-3 text-20 font-semibold">{data.name}</h1>
-        <Html value={data.description_html} />
-        <section className="my-7 border-y border-subtle py-5">
-          <h2 className="mb-5 text-13 font-medium">Properties</h2>
-          <dl className="space-y-4 text-13">
-            <div className="grid grid-cols-[135px_1fr] items-center gap-0">
+      <article className="client-task client-task-layout">
+        <div className="client-task-intro">
+          <p className="mb-2 text-12 text-tertiary">#{data.sequence}</p>
+          <h1 className="mb-3 text-20 font-semibold">{data.name}</h1>
+        </div>
+        <aside className="client-task-properties" aria-label="Work item properties">
+          <h2 className="client-properties-heading">Properties</h2>
+          <dl className="space-y-3 text-13">
+            <div className="grid grid-cols-[92px_1fr] items-center gap-0">
               <dt className="flex items-center gap-2 text-tertiary">
                 <Circle size={15} />
                 State
               </dt>
-              <dd className="flex items-center gap-2">
+              <dd className="client-state-pill" data-state={data.group}>
                 <Status group={data.group} />
                 {data.status}
               </dd>
             </div>
-            <div className="grid grid-cols-[135px_1fr] items-center gap-0">
+            <div className="grid grid-cols-[92px_1fr] items-center gap-0">
               <dt className="flex items-center gap-2 text-tertiary">
-                <PriorityIcon priority="low" />
+                <Flag size={16} />
                 Priority
               </dt>
-              <dd className="flex items-center gap-2 capitalize">
-                <PriorityIcon priority={data.priority} />
-                {data.priority}
+              <dd>
+                <ClientPriority priority={data.priority} />
               </dd>
             </div>
-            <div className="grid grid-cols-[135px_1fr] items-center gap-0">
+            <div className="grid grid-cols-[92px_1fr] items-center gap-0">
               <dt className="flex items-center gap-2 text-tertiary">
                 <CalendarDays size={15} />
                 Due date
               </dt>
-              <dd>{shortDate(data.due_date)}</dd>
+              <dd>{data.due_date ? shortDate(data.due_date) : "Not scheduled"}</dd>
+            </div>
+            <div className="grid grid-cols-[92px_1fr] items-center">
+              <dt className="flex items-center gap-2 text-tertiary">
+                <CalendarDays size={15} />
+                Start date
+              </dt>
+              <dd>{data.start_date ? shortDate(data.start_date) : "Not scheduled"}</dd>
             </div>
             {data.request_status && (
-              <div className="grid grid-cols-[135px_1fr] items-center gap-0">
+              <div className="grid grid-cols-[92px_1fr] items-center gap-0">
                 <dt className="text-secondary">Request</dt>
                 <dd>{data.request_status}</dd>
               </div>
             )}
           </dl>
-        </section>
-        <section className="mt-6">
-          <h2 className="mb-4 text-14 font-medium">Attachments</h2>
-          {data.files.length ? (
-            <div className="space-y-2">
-              {data.files.map((f) => (
-                <a
-                  key={f.id}
-                  href={`${f.url}${suffix}`}
-                  className="client-surface flex w-fit max-w-full items-center gap-2 rounded-md border border-subtle px-3 py-2.5 text-13 hover:border-strong"
-                >
-                  <Paperclip size={14} />
-                  <span className="truncate">{f.name}</span>
-                  <span className="text-11 text-tertiary">{Math.ceil(f.size / 1024)} KB</span>
-                </a>
-              ))}
-            </div>
-          ) : (
-            <p className="text-13 text-tertiary">No attachments</p>
-          )}
-          {!preview && (
-            <label className="focus-within:outline-accent-primary mt-4 inline-flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-subtle px-3 py-2 text-12 text-secondary focus-within:outline-2 hover:border-strong">
-              <Plus size={14} />
-              Add attachment<span className="text-tertiary">· up to 10 MB</span>
-              <input
-                aria-label="Add attachment"
-                type="file"
-                className="sr-only"
-                disabled={busy}
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  if (file.size > 10 * 1024 * 1024) {
-                    setFailure("Choose a file of up to 10 MB.");
-                    return;
-                  }
-                  setBusy(true);
-                  setFailure("");
-                  const form = new FormData();
-                  form.append("file", file);
-                  form.append("operation_id", fileOperation.current);
-                  try {
-                    await api(`${slug}/work/${id}/files/`, form);
-                    fileOperation.current = crypto.randomUUID();
-                    reload();
-                  } catch (err) {
-                    setFailure((err as Error).message);
-                  } finally {
-                    setBusy(false);
-                    e.target.value = "";
-                  }
-                }}
-              />
-            </label>
-          )}
-        </section>
-        <section className="mt-8 pt-2">
-          <h2 className="mb-5 text-14 font-medium">Activity</h2>
-          {data.comments.length ? (
-            data.comments.map((c) => (
-              <div key={c.id} className="mb-6 flex gap-3">
-                <div className="client-home-icon flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-subtle text-11 text-accent-primary">
-                  {c.author[0]}
-                </div>
-                <div className="min-w-0">
-                  <div className="mb-2 flex items-center gap-3 text-12">
-                    <span className="font-medium">{c.author}</span>
-                    <time className="text-tertiary">{shortDate(c.created_at)}</time>
+        </aside>
+        <div className="client-task-content">
+          <div className="client-task-description">
+            {data.description_html ? (
+              <Html value={data.description_html} />
+            ) : (
+              <p className="text-13 text-tertiary">No description has been added yet.</p>
+            )}
+          </div>
+          <section className="mt-7 border-t border-subtle pt-5">
+            <h2 className="mb-4 text-14 font-medium">
+              Attachments <span className="font-normal ml-2 text-12 text-tertiary">{data.files.length}</span>
+            </h2>
+            {data.files.length ? (
+              <div className="space-y-2">
+                {data.files.map((f) => (
+                  <a
+                    key={f.id}
+                    href={`${f.url}${suffix}`}
+                    className="flex w-fit max-w-full items-center gap-2 rounded-md border border-subtle px-3 py-2.5 text-13 hover:border-strong"
+                  >
+                    <Paperclip size={14} />
+                    <span className="truncate">{f.name}</span>
+                    <span className="text-11 text-tertiary">{Math.ceil(f.size / 1024)} KB</span>
+                  </a>
+                ))}
+              </div>
+            ) : preview ? (
+              <p className="text-13 text-tertiary">No attachments</p>
+            ) : null}
+            {!preview && (
+              <label className="client-upload-control" aria-disabled={busy}>
+                <span className="client-icon-tile">
+                  <Paperclip size={16} />
+                </span>
+                <span>
+                  <strong>Add attachment</strong>
+                  <small>Share files with your team · up to 10 MB</small>
+                </span>
+                <Plus size={16} />
+                <input
+                  aria-label="Add attachment"
+                  type="file"
+                  className="sr-only"
+                  disabled={busy}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 10 * 1024 * 1024) {
+                      setFailure("Choose a file of up to 10 MB.");
+                      return;
+                    }
+                    const fileInput = e.currentTarget;
+                    setBusy(true);
+                    setFailure("");
+                    setSaved("");
+                    const form = new FormData();
+                    form.append("file", file);
+                    form.append("operation_id", fileOperation.current);
+                    try {
+                      await api(`${slug}/work/${id}/files/`, form);
+                      fileOperation.current = crypto.randomUUID();
+                      setSaved("Attachment added.");
+                      reload();
+                    } catch (err) {
+                      setFailure((err as Error).message);
+                    } finally {
+                      setBusy(false);
+                      fileInput.value = "";
+                    }
+                  }}
+                />
+              </label>
+            )}
+          </section>
+          <section className="mt-8 pt-2">
+            <h2 className="mb-5 text-14 font-medium">
+              Conversation <span className="font-normal ml-2 text-12 text-tertiary">{data.comments.length}</span>
+            </h2>
+            {data.comments.length ? (
+              data.comments.map((c) => (
+                <div key={c.id} className="mb-6 flex gap-3">
+                  <div className="client-home-icon flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-subtle text-11 text-accent-primary">
+                    {c.author[0]}
                   </div>
-                  <Html value={c.html} />
+                  <div className="min-w-0">
+                    <div className="mb-2 flex items-center gap-3 text-12">
+                      <span className="font-medium">{c.author}</span>
+                      <time
+                        dateTime={c.created_at}
+                        className="text-tertiary"
+                        title={new Date(c.created_at).toLocaleString()}
+                      >
+                        {new Intl.DateTimeFormat("en", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        }).format(new Date(c.created_at))}
+                      </time>
+                    </div>
+                    <Html value={c.html} />
+                  </div>
                 </div>
-              </div>
-            ))
-          ) : (
-            <p className="mb-5 text-13 text-tertiary">No messages yet.</p>
-          )}
-          {failure && <ErrorMessage error={failure} />}{" "}
-          {!preview && (
-            <form onSubmit={reply} className="client-surface client-composer mt-4 rounded-lg border border-subtle">
-              <textarea
-                aria-label="Reply to your team"
-                placeholder="Add comment"
-                required
-                maxLength={20000}
-                rows={4}
-                className="w-full resize-y bg-transparent p-4 text-13 outline-none"
-                value={body}
-                onChange={(e) => {
-                  setBody(e.target.value);
-                  operation.current = crypto.randomUUID();
-                }}
-              />
-              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-subtle px-3 py-2.5">
-                <span className="text-11 text-tertiary">Shared with your Refract team</span>
-                <Button type="submit" size="sm" disabled={busy || !body.trim()}>
-                  {busy ? "Saving..." : "Comment"}
-                </Button>
-              </div>
-            </form>
-          )}
-        </section>
+              ))
+            ) : (
+              <p className="mb-5 text-13 text-tertiary">
+                Ask a question or share feedback. Your Refract team will see it here.
+              </p>
+            )}
+            {failure && <ErrorMessage error={failure} />}
+            {saved && (
+              <p role="status" className="mb-3 text-12 text-secondary">
+                {saved}
+              </p>
+            )}
+            {!preview && (
+              <form onSubmit={reply} className="client-surface client-composer mt-4 rounded-lg border border-subtle">
+                <textarea
+                  ref={replyInput}
+                  disabled={busy}
+                  onKeyDown={(e) => {
+                    if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && body.trim() && !busy) {
+                      e.preventDefault();
+                      e.currentTarget.form?.requestSubmit();
+                    }
+                  }}
+                  aria-label="Reply to your team"
+                  placeholder="Ask a question or share feedback…"
+                  required
+                  maxLength={20000}
+                  rows={3}
+                  className="w-full resize-y bg-transparent p-4 text-13 outline-none"
+                  value={body}
+                  onChange={(e) => {
+                    setBody(e.target.value);
+                    onDirtyChange(!!e.target.value);
+                    setSaved("");
+                    operation.current = crypto.randomUUID();
+                  }}
+                />
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-subtle px-3 py-2.5">
+                  <span className="text-11 text-tertiary">Shared with your Refract team · ⌘ / Ctrl + Enter</span>
+                  <Button type="submit" size="lg" disabled={busy || !body.trim()}>
+                    {busy ? "Saving..." : "Comment"}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </section>
+        </div>
       </article>
     </>
   );
@@ -774,6 +911,8 @@ function TaskDetail({ slug, id, suffix, preview }: { slug: string; id: string; s
 
 function RequestForm({ slug, preview }: { slug: string; preview: boolean }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const operation = useRef(crypto.randomUUID());
@@ -799,7 +938,11 @@ function RequestForm({ slug, preview }: { slug: string; preview: boolean }) {
           <IntakeIcon className="size-4 text-secondary" />
           New request
         </Dialog.Title>
-        <Link to={`/client/${slug}/requests`} aria-label="Close request" className="client-icon-control">
+        <Link
+          to={returnTo?.startsWith(`/client/${slug}/`) ? returnTo : `/client/${slug}/requests`}
+          aria-label="Close request"
+          className="client-icon-control"
+        >
           <X size={18} />
         </Link>
       </div>
@@ -857,7 +1000,7 @@ function RequestForm({ slug, preview }: { slug: string; preview: boolean }) {
             size="lg"
             className="min-h-9"
             variant="secondary"
-            onClick={() => navigate(`/client/${slug}/requests`)}
+            onClick={() => navigate(returnTo?.startsWith(`/client/${slug}/`) ? returnTo : `/client/${slug}/requests`)}
           >
             Cancel
           </Button>

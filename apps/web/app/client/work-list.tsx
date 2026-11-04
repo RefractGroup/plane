@@ -1,54 +1,18 @@
 // Copyright (c) 2023-present Plane Software, Inc. and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
-import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router";
-import {
-  CalendarDays,
-  Check,
-  ChevronDown,
-  ChevronRight,
-  Circle,
-  Filter,
-  Search,
-  SlidersHorizontal,
-  X,
-} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
+import { CalendarDays, ChevronDown, ChevronRight, WorkItemsIcon, IntakeIcon, Plus } from "@plane/propel/refract-icons";
 import { Button } from "@plane/propel/button";
-import { Badge } from "@plane/propel/badge";
-import { Input } from "@plane/propel/input";
-import { Menu } from "@plane/propel/menu";
-import { IconButton } from "@plane/propel/icon-button";
-import {
-  WorkItemsIcon,
-  IntakeIcon,
-  ListLayoutIcon,
-  BoardLayoutIcon,
-  PriorityIcon,
-  StateGroupIcon,
-} from "@plane/propel/icons";
 import { Header, Row } from "@plane/ui";
 import { LogoSpinner } from "@/components/common/logo-spinner";
 import { useResource, shortDate } from "./api";
 import type { Work, WorkItem } from "./api";
+import { ClientPriority, ClientStateIcon } from "./work-icons";
+import { ClientWorkToolbar } from "./work-toolbar";
+import { readWorkView, isOverdue, groupWorkItems, views } from "./work-view";
 
-const groups = ["triage", "backlog", "unstarted", "started", "completed", "cancelled"];
-const groupNames: Record<string, string> = {
-  triage: "New requests",
-  backlog: "Backlog",
-  unstarted: "To do",
-  started: "In progress",
-  completed: "Done",
-  cancelled: "Cancelled",
-};
-export function ClientStateIcon({ group }: { group: string }) {
-  return (
-    <StateGroupIcon
-      stateGroup={
-        (group === "triage" ? "backlog" : group) as "backlog" | "unstarted" | "started" | "completed" | "cancelled"
-      }
-    />
-  );
-}
+export { ClientPriority, ClientStateIcon } from "./work-icons";
 
 export function ClientWorkList({
   slug,
@@ -65,36 +29,58 @@ export function ClientWorkList({
 }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const query = new URLSearchParams(location.search).get("q") || "";
-  const [search, setSearch] = useState(query);
-  const [searchOpen, setSearchOpen] = useState(!!query);
-  const requestedGroup = new URLSearchParams(location.search).get("group") || "";
-  const [group, setGroup] = useState(groups.includes(requestedGroup) ? requestedGroup : "");
-  useEffect(() => setGroup(groups.includes(requestedGroup) ? requestedGroup : ""), [requestedGroup]);
-  const [board, setBoard] = useState(false);
-  const [grouped, setGrouped] = useState(true);
-  const [showPriority, setShowPriority] = useState(true);
-  const [showDate, setShowDate] = useState(true);
+  const [urlParams, setUrlParams] = useSearchParams();
+  const view = readWorkView(location.search);
+  const [search, setSearch] = useState(view.query);
   const [collapsed, setCollapsed] = useState<string[]>([]);
-  const [offset, setOffset] = useState(0);
+  useEffect(() => setSearch(view.query), [view.query]);
+  const update = useCallback(
+    (changes: Record<string, string>, replace = false) =>
+      setUrlParams(
+        (current) => {
+          const next = new URLSearchParams(current);
+          if (Object.keys(changes).some((key) => ["q", "group", "priority", "view", "sort"].includes(key)))
+            next.delete("page");
+          Object.entries(changes).forEach(([key, value]) => (value ? next.set(key, value) : next.delete(key)));
+          return next;
+        },
+        { replace, preventScrollReset: true, flushSync: true }
+      ),
+    [setUrlParams]
+  );
   useEffect(() => {
-    setSearch(query);
-    setSearchOpen(!!query);
-  }, [query]);
-  useEffect(() => setOffset(0), [search, group, requests]);
+    if (search.trim() === view.query) return;
+    const timer = window.setTimeout(() => update({ q: search.trim() }, true), 250);
+    return () => window.clearTimeout(timer);
+  }, [search, view.query, update]);
   const params = new URLSearchParams(suffix);
   if (requests) params.set("requests", "1");
-  if (search) params.set("search", search);
-  if (group) params.set("group", group);
-  params.set("offset", String(offset));
-  const { data, error } = useResource<Work>(`${slug}/work/?${params}`);
-  const sections = grouped ? groups.filter((g) => data?.results.some((i) => i.group === g)) : ["all"];
-  const filterLabel = group ? groupNames[group] : "All states";
+  if (view.query) params.set("search", view.query);
+  if (view.group) params.set("group", view.group);
+  if (view.priority) params.set("priority", view.priority);
+  params.set("view", view.view);
+  params.set("sort", view.sort);
+  params.set("offset", String(view.offset));
+  const { data, error, reload, loading } = useResource<Work>(`${slug}/work/?${params}`, {
+    retainDataFor: `${slug}:${preview}:${requests}`,
+  });
+  const sections = groupWorkItems(data?.results || [], view.grouped || view.board);
+  const filtered = !!(view.query || view.group || view.priority);
+  const clear = () => {
+    setSearch("");
+    update({ q: "", group: "", priority: "" });
+  };
+  const detailParams = new URLSearchParams(urlParams);
+  if (requests) detailParams.set("source", "requests");
+  else detailParams.delete("source");
+  const querySuffix = detailParams.size ? `?${detailParams}` : "";
+  const returnTo = `/client/${slug}/${requests ? "requests" : "work"}${location.search}`;
+  const orderedIds = sections.flatMap((section) => section.items.map((item) => item.id));
   return (
     <>
-      <Header className="h-11 border-b border-subtle px-page-x">
+      <Header className="client-page-header h-12 border-b border-subtle px-page-x">
         <Header.LeftItem className="min-w-0 flex-nowrap gap-3">
-          <span className="hidden max-w-36 truncate text-13 text-secondary xl:block">{projectName}</span>
+          <span className="hidden max-w-40 truncate text-13 text-secondary xl:block">{projectName}</span>
           <ChevronRight size={14} className="hidden shrink-0 text-tertiary xl:block" />
           <h1 className="flex items-center gap-2 text-14 font-medium whitespace-nowrap">
             {requests ? (
@@ -104,166 +90,139 @@ export function ClientWorkList({
             )}
             {requests ? "Requests" : "Work items"}
           </h1>
-          {data && (
-            <Badge variant="brand" size="sm">
-              {data.count}
-            </Badge>
-          )}
+          <span className="client-work-count" aria-live="polite" aria-busy={loading}>
+            {data?.count}
+          </span>
         </Header.LeftItem>
-        <Header.RightItem className="shrink-0 gap-2">
-          <Menu
-            ariaLabel="Layout"
-            label={board ? <BoardLayoutIcon className="size-4" /> : <ListLayoutIcon className="size-4" />}
-            buttonClassName="h-7"
-          >
-            <Menu.MenuItem onClick={() => setBoard(false)}>
-              <ListLayoutIcon className="size-4" /> List {!board && <Check className="ml-auto size-3.5" />}
-            </Menu.MenuItem>
-            <Menu.MenuItem onClick={() => setBoard(true)}>
-              <BoardLayoutIcon className="size-4" /> Board {board && <Check className="ml-auto size-3.5" />}
-            </Menu.MenuItem>
-          </Menu>
-          <Menu
-            ariaLabel="Filter"
-            label={<Filter className="size-4" />}
-            noChevron
-            buttonClassName={`h-7 ${group ? "text-accent-primary" : ""}`}
-          >
-            {["", ...groups].map((g) => (
-              <Menu.MenuItem key={g} onClick={() => setGroup(g)}>
-                {g ? <ClientStateIcon group={g} /> : <Circle size={14} />}
-                {g ? groupNames[g] : "All states"}
-                {group === g && <Check className="ml-auto size-3.5" />}
-              </Menu.MenuItem>
-            ))}
-          </Menu>
-          <Menu
-            ariaLabel="Display"
-            label={<SlidersHorizontal className="size-4" />}
-            noChevron
-            buttonClassName="h-7"
-            closeOnSelect={false}
-          >
-            <Menu.MenuItem onClick={() => setGrouped(!grouped)}>
-              Group by state {grouped && <Check className="ml-auto size-3.5" />}
-            </Menu.MenuItem>
-            <Menu.MenuItem onClick={() => setShowPriority(!showPriority)}>
-              Priority {showPriority && <Check className="ml-auto size-3.5" />}
-            </Menu.MenuItem>
-            <Menu.MenuItem onClick={() => setShowDate(!showDate)}>
-              Due date {showDate && <Check className="ml-auto size-3.5" />}
-            </Menu.MenuItem>
-          </Menu>
-          <IconButton
-            aria-label="Search work items"
-            variant="secondary"
-            size="base"
-            icon={Search}
-            onClick={() => setSearchOpen(!searchOpen)}
-          />
+        <Header.RightItem>
           {!preview && (
-            <Button size="lg" className="hidden sm:inline-flex" onClick={() => navigate(`/client/${slug}/new`)}>
-              New request
+            <Button
+              size="xl"
+              onClick={() => navigate(`/client/${slug}/new${location.search}`, { state: { returnTo } })}
+            >
+              <Plus size={16} /> New request
             </Button>
           )}
         </Header.RightItem>
       </Header>
-      {(searchOpen || group) && (
-        <Row className="flex items-center gap-3 border-b border-subtle py-2">
-          {searchOpen && (
-            <Input
-              aria-label="Search work"
-              placeholder="Search work items..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-7 w-56"
-            />
-          )}
-          {group && (
-            <button
-              className="flex items-center gap-2 rounded border border-subtle px-2 py-1 text-12"
-              onClick={() => setGroup("")}
-            >
-              {filterLabel}
-              <X size={12} />
-            </button>
-          )}
-        </Row>
-      )}
-      {error ? (
-        <p role="alert" className="p-6 text-13 text-secondary">
-          {error}
-        </p>
-      ) : !data ? (
-        <div className="flex h-48 items-center justify-center" aria-label="Loading">
-          <LogoSpinner />
-        </div>
-      ) : !data.results.length ? (
-        <p className="mx-auto max-w-md px-8 py-16 text-center text-13 leading-relaxed text-tertiary">
-          {search || group
-            ? "No work items match these filters."
-            : requests
-              ? "No requests yet. Send your team a request to get started."
-              : "Your team hasn’t shared any work items yet."}
-        </p>
-      ) : (
-        <div className={board ? "flex min-h-full gap-3 overflow-x-auto px-4 pt-3 pb-6" : ""}>
-          {sections.map((g) => {
-            const items = data.results.filter((item) => g === "all" || item.group === g);
-            const closed = collapsed.includes(g);
-            return (
-              <section key={g} className={board ? "w-80 shrink-0" : ""}>
-                <Row
-                  className={
-                    board ? "mb-2 border-b border-subtle px-3 py-2" : "w-full border-b border-subtle py-1 pr-3"
-                  }
+      <ClientWorkToolbar view={view} search={search} setSearch={setSearch} update={update} clear={clear} />
+      <div className="client-work-results" aria-busy={loading}>
+        <div className="client-work-progress" data-loading={loading || undefined} aria-hidden="true" />
+        <span className="sr-only" role="status">
+          {loading ? "Updating work items" : data ? `${data.count} work ${data.count === 1 ? "item" : "items"}` : ""}
+        </span>
+        {error ? (
+          <div role="alert" className="client-work-empty">
+            <h2>We couldn’t load your work</h2>
+            <p>{error}</p>
+            <Button variant="secondary" onClick={reload}>
+              Try again
+            </Button>
+          </div>
+        ) : !data ? (
+          <div className="flex h-48 items-center justify-center" aria-label="Loading work items">
+            <LogoSpinner />
+          </div>
+        ) : !data.results.length ? (
+          <div className="client-work-empty">
+            <WorkItemsIcon className="mx-auto size-6 text-tertiary" />
+            <h2>
+              {filtered
+                ? "No matching work items"
+                : requests
+                  ? "Start a conversation with your team"
+                  : view.view !== "all"
+                    ? `No ${views[view.view as keyof typeof views].toLowerCase()} work items`
+                    : "Your shared work will appear here"}
+            </h2>
+            <p>
+              {filtered
+                ? "Try another state, priority or search term."
+                : view.view !== "all"
+                  ? "Other work items are available in All work."
+                  : "Send a request with the context and timing your team needs."}
+            </p>
+            {filtered ? (
+              <Button variant="secondary" onClick={clear}>
+                Clear filters
+              </Button>
+            ) : view.view !== "all" ? (
+              <Button variant="secondary" onClick={() => update({ view: "all" })}>
+                View all work
+              </Button>
+            ) : (
+              !preview && <Button onClick={() => navigate(`/client/${slug}/new`)}>New request</Button>
+            )}
+          </div>
+        ) : (
+          <div className={view.board ? "client-board" : "client-work-table"}>
+            {!view.board && (
+              <div className="client-work-columns" aria-hidden="true">
+                <span className="client-work-id">ID</span>
+                <span className="flex-1">Work item</span>
+                <span className="client-work-metadata">
+                  {!view.grouped && <span className="client-row-state">State</span>}
+                  {view.showPriority && <span className="client-priority-column">Priority</span>}
+                  {view.showDate && <span className="client-row-date">Due date</span>}
+                </span>
+              </div>
+            )}
+            {sections.map(({ key: g, group, label, items }) => {
+              const closed = collapsed.includes(g);
+              return (
+                <section
+                  key={g}
+                  className={view.board ? "client-board-column" : "client-work-group"}
+                  data-state={group}
                 >
-                  <button
-                    aria-expanded={!closed}
-                    onClick={() => setCollapsed(closed ? collapsed.filter((key) => key !== g) : [...collapsed, g])}
-                    className="group/list-header flex w-full items-center gap-2 py-1.5 text-left"
-                  >
-                    {g === "all" ? (
-                      <Circle className="size-3.5 fill-current text-tertiary" />
-                    ) : (
-                      <ClientStateIcon group={g} />
-                    )}
-                    <span className="truncate text-14 font-medium">
-                      {g === "all" ? "All work items" : groupNames[g]}
-                    </span>
-                    <span className="ml-1 inline-flex min-w-5 justify-center rounded border border-subtle px-1 text-11 text-tertiary tabular-nums">
-                      {items.length}
-                    </span>
-                    <ChevronDown
-                      className={`ml-auto size-3.5 text-tertiary opacity-0 group-hover/list-header:opacity-100 ${closed ? "-rotate-90 opacity-100" : ""}`}
-                    />
-                  </button>
-                </Row>
-                {!closed &&
-                  items.map((item) => (
-                    <NativeWorkRow
-                      key={item.id}
-                      item={item}
-                      board={board}
-                      showPriority={showPriority}
-                      showDate={showDate}
-                      href={`/client/${slug}/work/${item.id}${suffix}`}
-                    />
-                  ))}
-              </section>
-            );
-          })}
-        </div>
-      )}
+                  <Row className="client-group-heading">
+                    <button
+                      aria-expanded={!closed}
+                      onClick={() => setCollapsed(closed ? collapsed.filter((k) => k !== g) : [...collapsed, g])}
+                      className="flex w-full items-center gap-2 text-left text-13"
+                    >
+                      <ChevronDown className={`size-3.5 text-tertiary ${closed ? "-rotate-90" : ""}`} />
+                      {g !== "all" && <ClientStateIcon group={group} />}
+                      <span className="font-medium">{label}</span>
+                      <span className="text-12 text-tertiary tabular-nums">{items.length}</span>
+                    </button>
+                  </Row>
+                  {!closed &&
+                    items.map((item) => (
+                      <NativeWorkRow
+                        key={item.id}
+                        item={item}
+                        board={view.board}
+                        showPriority={view.showPriority}
+                        showDate={view.showDate}
+                        showState={!view.grouped && !view.board}
+                        href={`/client/${slug}/work/${item.id}${querySuffix}`}
+                        navigationState={{ returnTo, workIds: orderedIds }}
+                      />
+                    ))}
+                </section>
+              );
+            })}
+          </div>
+        )}
+      </div>
       {data && data.count > 100 && (
         <Row className="flex items-center justify-end gap-4 py-4 text-12">
-          <Button variant="secondary" disabled={!offset} onClick={() => setOffset(Math.max(0, offset - 100))}>
+          <Button
+            variant="secondary"
+            disabled={!view.offset}
+            onClick={() => update({ page: String(view.offset / 100 - 1) })}
+          >
             Previous
           </Button>
           <span>
-            {offset + 1}–{Math.min(offset + 100, data.count)} of {data.count}
+            {view.offset + 1}–{Math.min(view.offset + 100, data.count)} of {data.count}
           </span>
-          <Button variant="secondary" disabled={offset + 100 >= data.count} onClick={() => setOffset(offset + 100)}>
+          <Button
+            variant="secondary"
+            disabled={view.offset + 100 >= data.count}
+            onClick={() => update({ page: String(view.offset / 100 + 1) })}
+          >
             Next
           </Button>
         </Row>
@@ -277,57 +236,45 @@ function NativeWorkRow({
   board,
   showDate,
   showPriority,
+  showState,
+  navigationState,
 }: {
   item: WorkItem;
   href: string;
   board: boolean;
   showDate: boolean;
   showPriority: boolean;
+  showState: boolean;
+  navigationState: { returnTo: string; workIds: string[] };
 }) {
-  const properties = (
-    <div className="flex shrink-0 flex-wrap items-center gap-2 text-12 whitespace-nowrap text-secondary">
-      <span className="inline-flex h-5 items-center gap-1.5 rounded-sm border border-subtle px-1.5">
-        <ClientStateIcon group={item.group} />
-        {item.status}
-      </span>
-      {showPriority && (
-        <span
-          title={`${item.priority} priority`}
-          className="inline-flex h-5 items-center rounded-sm border border-subtle px-1.5"
-        >
-          <PriorityIcon priority={item.priority} />
-        </span>
-      )}
-      {showDate && item.due_date && (
-        <span className="inline-flex h-5 items-center gap-1 rounded-sm border border-subtle px-1.5">
-          <CalendarDays size={12} />
-          {shortDate(item.due_date)}
-        </span>
-      )}
-    </div>
-  );
-  if (board)
-    return (
-      <Link
-        to={href}
-        className="client-surface client-board-card group/kanban-block mb-3 block w-full rounded-lg border border-subtle bg-surface-1 p-3.5 text-13 hover:border-strong"
-      >
-        <div className="space-y-2">
-          <span className="text-12 text-tertiary">#{item.sequence}</span>
-          <div className="line-clamp-2 text-body-sm-medium text-primary">{item.name}</div>
-          <div className="pt-1.5">{properties}</div>
-        </div>
-      </Link>
-    );
   return (
-    <Link to={href} className="block w-full cursor-pointer">
-      <Row className="group/list-block relative flex min-h-11 flex-col gap-3 border-b border-subtle bg-layer-transparent py-3 text-13 transition-colors hover:bg-layer-transparent-hover sm:flex-row sm:items-center">
-        <div className="flex min-w-0 flex-1 items-center gap-0.5">
-          <span className="mr-2 w-8 shrink-0 text-11 text-tertiary tabular-nums">#{item.sequence}</span>
-          <p className="truncate text-body-xs-medium text-primary">{item.name}</p>
-        </div>
-        {properties}
-      </Row>
+    <Link to={href} state={navigationState} className={board ? "client-board-work" : "client-work-row"}>
+      <span className="client-work-id">#{item.sequence}</span>
+      {board && <span className="sr-only">{item.status}</span>}
+      <span className="client-work-title">{item.name}</span>
+      <span className="client-work-metadata">
+        {showState && (
+          <span className="client-row-state">
+            <ClientStateIcon group={item.group} />
+            {item.status}
+          </span>
+        )}
+        {showPriority && (
+          <span className="client-priority-column">
+            <ClientPriority priority={item.priority} />
+          </span>
+        )}
+        {showDate && (
+          <span
+            className={`client-row-date ${isOverdue(item) ? "is-overdue" : ""}`}
+            title={item.due_date ? `${isOverdue(item) ? "Overdue · " : "Due "}${item.due_date}` : "No due date"}
+          >
+            <CalendarDays size={15} />
+            {item.due_date ? shortDate(item.due_date) : "No date"}
+            {isOverdue(item) && <span className="sr-only">Overdue</span>}
+          </span>
+        )}
+      </span>
     </Link>
   );
 }
